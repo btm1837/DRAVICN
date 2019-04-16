@@ -32,13 +32,14 @@ class MinCostFlow:
         self.arc_data.set_index(['Start', 'End'], inplace=True)
         self.arc_data.sort_index(inplace=True)
 
-        #self.trip_data = pandas.read_csv('trips.csv')
-        #self.trip_data.set_index(['Origin','Dest'], inplace=True)
-        #self.trip_data.sort_index(inplace=True)
+        self.trip_data = pandas.read_csv('trips.csv')
+        self.trip_data.set_index(['Node','Trip'], inplace=True)
+        self.trip_data.sort_index(inplace=True)
 
         self.node_set = self.node_data.index.unique()
         self.arc_set = self.arc_data.index.unique()
-        #self.trip_set = self.trip_data.index.unique()
+        self.trip_set = self.trip_data.index.unique()
+        self.trip_set = self.trip_data.index.levels[1].unique()
 
         self.createModel()
 
@@ -49,43 +50,74 @@ class MinCostFlow:
         # Create sets
         self.m.node_set = pe.Set(initialize=self.node_set)
         self.m.arc_set = pe.Set(initialize=self.arc_set, dimen=2)
+        #Addition of Commodity set
+        self.m.trip_set = pe.Set(initialize=self.trip_set)
+
+        #Construct Sets for iteration
+        #self.m.node_set.construct()
+        #self.m.arc_set.construct()
+        #self.m.trip_set.construct()
+
+        #Create Params
+        #df_cost =
+        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Cost'].to_frame)
+        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Capacity'].to_frame)
+
+        #initialize Parameters
+        self.m.Cost_param.construct()
+        self.m.Capacity_param.construct()
+
 
         # Create variables
-        self.m.Y = pe.Var(self.m.arc_set, domain=pe.NonNegativeReals)
+        self.m.Y = pe.Var(self.m.arc_set * self.m.trip_set, domain=pe.NonNegativeReals)
+        self.m.Y.construct()
 
         # Create objective
         def obj_rule(m):
-            return sum(m.Y[e] * self.arc_data.loc[e, 'Cost'] for e in self.arc_set)
+            return sum(sum(self.m.Y[start,end,Trip] * self.m.Cost_param[start,end] for start,end in self.m.arc_data.iterrows()) for Trip in self.m.trip_set)
 
         self.m.OBJ = pe.Objective(rule=obj_rule, sense=pe.minimize)
 
         # Flow Balance rule
-        def flow_bal_rule(m, n):
+        def flow_bal_rule(m, n,t):
             arcs = self.arc_data.reset_index()
             preds = arcs[arcs.End == n]['Start']
             succs = arcs[arcs.Start == n]['End']
-            return sum(m.Y[(p, n)] for p in preds) - sum(m.Y[(n, s)] for s in succs) == self.node_data.loc[
-                n, 'Imbalance']
-
-        self.m.FlowBal = pe.Constraint(self.m.node_set, rule=flow_bal_rule)
-
-        # Upper bounds rule
-        def upper_bounds_rule(m, n1, n2):
-            e = (n1, n2)
-            if self.arc_data.loc[e, 'UpperBound'] < 0:
+            lhs = sum(m.Y[(p, n, t)] for p in preds) - sum(m.Y[(n, s, t)] for s in succs)
+            imbalance = self.trip_data['SupplyDemand'].get((n,t),0)
+            constr = (lhs == imbalance)
+            if isinstance(constr,bool):
                 return pe.Constraint.Skip
-            return m.Y[e] <= self.arc_data.loc[e, 'UpperBound']
+            return  constr
 
-        self.m.UpperBound = pe.Constraint(self.m.arc_set, rule=upper_bounds_rule)
 
-        # Lower bounds rule
-        def lower_bounds_rule(m, n1, n2):
-            e = (n1, n2)
-            if self.arc_data.loc[e, 'LowerBound'] < 0:
+        self.m.FlowBal = pe.Constraint(self.m.node_set * self.m.trip_set, rule=flow_bal_rule)
+
+        #Capacity Joint Constraint
+        def joint_capacity_rule(m,i,j):
+            capacity = self.arc_data['Capacity'].get((i,j),-1)
+            if capacity < 0 :
                 return pe.Constraint.Skip
-            return m.Y[e] >= self.arc_data.ix[e, 'LowerBound']
+            return sum(self.m.Y[i,j,k] for k in self.trip_set) <= capacity
+        self.m.Capacity = pe.Constraint(self.m.arc_set,rule=joint_capacity_rule)
 
-        self.m.LowerBound = pe.Constraint(self.m.arc_set, rule=lower_bounds_rule)
+        # # Upper bounds rule
+        # def upper_bounds_rule(m, n1, n2):
+        #     e = (n1, n2)
+        #     if self.arc_data.loc[e, 'UpperBound'] < 0:
+        #         return pe.Constraint.Skip
+        #     return m.Y[e] <= self.arc_data.loc[e, 'UpperBound']
+        #
+        # self.m.UpperBound = pe.Constraint(self.m.arc_set, rule=upper_bounds_rule)
+        #
+        # # Lower bounds rule
+        # def lower_bounds_rule(m, n1, n2):
+        #     e = (n1, n2)
+        #     if self.arc_data.loc[e, 'LowerBound'] < 0:
+        #         return pe.Constraint.Skip
+        #     return m.Y[e] >= self.arc_data.ix[e, 'LowerBound']
+        #
+        # self.m.LowerBound = pe.Constraint(self.m.arc_set, rule=lower_bounds_rule)
 
     def solve(self):
         """Solve the model."""
