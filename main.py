@@ -25,23 +25,67 @@ class MinCostFlow:
         """Read in the csv data."""
         # Read in the nodes file
         self.node_data = pandas.read_csv('nodes.csv')
-        #self.node_data.set_index(['Node'], inplace=True)
-        #self.node_data.sort_index(inplace=True)
+
         # Read in the arcs file
         self.arc_data = pandas.read_csv('arcs.csv')
-        self.arc_data.set_index(['Start', 'End'], inplace=True)
-        self.arc_data.sort_index(inplace=True)
 
+        # Read in the trips file
         self.trip_data = pandas.read_csv('trips.csv')
-        self.trip_data.set_index(['Node','Trip'], inplace=True)
-        self.trip_data.sort_index(inplace=True)
 
-        self.node_set = self.node_data.index.unique()
-        self.arc_set = self.arc_data.index.unique()
-        self.trip_set = self.trip_data.index.unique()
-        self.trip_set = self.trip_data.index.levels[1].unique()
+        # Create Node_set
+        self.node_set = set(self.node_data['Node'])
+
+        #Create trip_set and attributes
+        self.trip_set = set(self.trip_data['Trip'])
+        self.trip_net_demand = {}
+
+
+        #Create all arc related data attributes
+        self.arc_capacity = {}
+        self.arc_cost = {}
+        self.arc_set = set()
+
+        self.set_trip_attributes_from_pandas()
+        self.set_arc_attributes_from_pandas()
+        self.set_node_set_from_pandas()
 
         self.createModel()
+
+    def set_node_set_from_pandas(self):
+        """
+        Uses the pandas object created by pandas.read_csv('arcs.csv') to populate:
+        self.node_set
+        :return:
+        """
+        self.node_set = set(self.node_data['Node'])
+
+
+    def set_arc_attributes_from_pandas(self):
+        """
+        Uses the pandas object created by pandas.read_csv('arcs.csv') to populate:
+        self.arc_capacity
+        self.arc_cost
+        self.arc_set
+
+        :return:
+        """
+        for item in self.arc_data.iterrows():
+            self.arc_capacity[item[1][0],item[1][1]]=item[1][3]
+            self.arc_cost[item[1][0],item[1][1]]=item[1][2]
+            self.arc_set.add((item[1][0],item[1][1]))
+        return
+
+    def set_trip_attributes_from_pandas(self):
+        """
+        Uses the pandas object created by pandas.read_csv('trips.csv') to populate:
+        self.trip_net_demand
+        self.trip_set
+        :return:
+        """
+        for item in self.trip_data.iterrows():
+            self.trip_net_demand[item[1][0], item[1][1]] = item[1][2]
+        self.trip_set = set(self.trip_data['Trip'])
+        return
 
     def createModel(self):
         """Create the pyomo model given the csv data."""
@@ -54,8 +98,9 @@ class MinCostFlow:
         self.m.trip_set = pe.Set(initialize=self.trip_set)
 
         #Create Params
-        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Cost'])
-        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Capacity'])
+        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_cost)
+        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_capacity)
+        self.m.Net_demand_param = pe.Param(self.m.node_set,self.m.trip_set, initialize=self.trip_net_demand)
 
         # Create variables
         self.m.Y = pe.Var(self.m.arc_set , self.m.trip_set, domain=pe.NonNegativeReals)
@@ -71,25 +116,18 @@ class MinCostFlow:
 
         # Flow Balance rule
         def flow_bal_rule(m, n,t):
-            arcs = self.arc_data.reset_index()
-            preds = arcs[arcs.End == n]['Start']
-            succs = arcs[arcs.Start == n]['End']
-            lhs = sum(self.m.Y[(p, n), t] for p in preds) - sum(self.m.Y[(n, s), t] for s in succs)
-            imbalance = self.trip_data['SupplyDemand'].get((n,t),0)
-            constr = (lhs == imbalance)
-            if isinstance(constr,bool):
-                return pe.Constraint.Skip
+            lhs = sum(self.m.Y[(into,n),t] for (into,n) in self.m.arc_set ) \
+                  - sum(self.m.Y[(n,out),t] for (n,out) in self.m.arc_set )
+            constr = (lhs == self.m.Net_demand_param[n,t])
             return  constr
 
 
-        self.m.FlowBal = pe.Constraint(self.m.node_set * self.m.trip_set, rule=flow_bal_rule)
+        self.m.FlowBal = pe.Constraint(self.m.node_set, self.m.trip_set, rule=flow_bal_rule)
 
         #Capacity Joint Constraint
         def joint_capacity_rule(m,i,j):
-            capacity = self.arc_data['Capacity'].get((i,j),-1)
-            if capacity < 0 :
-                return pe.Constraint.Skip
-            return sum(self.m.Y[i,j,k] for k in self.trip_set) <= capacity
+            return sum(self.m.Y[i,j,k] for k in self.m.trip_set) <= self.m.Capacity_param[i,j]
+
         self.m.Capacity = pe.Constraint(self.m.arc_set,rule=joint_capacity_rule)
 
         # # Upper bounds rule
@@ -112,6 +150,7 @@ class MinCostFlow:
 
     def solve(self):
         """Solve the model."""
+        self.m.construct()
         self.i = self.m.create_instance()
         solver = pyomo.opt.SolverFactory('gurobi')
         results = solver.solve(self.i, tee=True, keepfiles=False,
