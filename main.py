@@ -25,8 +25,8 @@ class MinCostFlow:
         """Read in the csv data."""
         # Read in the nodes file
         self.node_data = pandas.read_csv('nodes.csv')
-        self.node_data.set_index(['Node'], inplace=True)
-        self.node_data.sort_index(inplace=True)
+        #self.node_data.set_index(['Node'], inplace=True)
+        #self.node_data.sort_index(inplace=True)
         # Read in the arcs file
         self.arc_data = pandas.read_csv('arcs.csv')
         self.arc_data.set_index(['Start', 'End'], inplace=True)
@@ -53,28 +53,19 @@ class MinCostFlow:
         #Addition of Commodity set
         self.m.trip_set = pe.Set(initialize=self.trip_set)
 
-        #Construct Sets for iteration
-        #self.m.node_set.construct()
-        #self.m.arc_set.construct()
-        #self.m.trip_set.construct()
-
         #Create Params
-        #df_cost =
-        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Cost'].to_frame)
-        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Capacity'].to_frame)
-
-        #initialize Parameters
-        self.m.Cost_param.construct()
-        self.m.Capacity_param.construct()
-
+        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Cost'])
+        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_data['Capacity'])
 
         # Create variables
-        self.m.Y = pe.Var(self.m.arc_set * self.m.trip_set, domain=pe.NonNegativeReals)
-        self.m.Y.construct()
+        self.m.Y = pe.Var(self.m.arc_set , self.m.trip_set, domain=pe.NonNegativeReals)
 
         # Create objective
+
         def obj_rule(m):
-            return sum(sum(self.m.Y[start,end,Trip] * self.m.Cost_param[start,end] for start,end in self.m.arc_data.iterrows()) for Trip in self.m.trip_set)
+            return sum(self.m.Y[(start,end), Trip] * self.m.Cost_param[start,end] \
+                       for (start, end) in self.m.arc_set\
+                       for Trip in self.m.trip_set)
 
         self.m.OBJ = pe.Objective(rule=obj_rule, sense=pe.minimize)
 
@@ -83,7 +74,7 @@ class MinCostFlow:
             arcs = self.arc_data.reset_index()
             preds = arcs[arcs.End == n]['Start']
             succs = arcs[arcs.Start == n]['End']
-            lhs = sum(m.Y[(p, n, t)] for p in preds) - sum(m.Y[(n, s, t)] for s in succs)
+            lhs = sum(self.m.Y[(p, n), t] for p in preds) - sum(self.m.Y[(n, s), t] for s in succs)
             imbalance = self.trip_data['SupplyDemand'].get((n,t),0)
             constr = (lhs == imbalance)
             if isinstance(constr,bool):
