@@ -1,5 +1,6 @@
 
 import pandas
+import collections
 
 class Cell:
     """
@@ -20,6 +21,11 @@ class Cell:
         #Cell ocupancy
         data = pandas.read_csv(Cells.csv)
         self.number_in_t0 = pandas.read_csv()
+
+        self.cell_queue = collections.deque([])
+        self.free_flow_speed =
+        self.max_vehicles
+
 
 
     #Getters Block

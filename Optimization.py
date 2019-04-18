@@ -59,6 +59,13 @@ class MinCostFlow:
         """
         self.node_set = set(self.node_data['Node'])
 
+    def set_node_set(self,new_node_set):
+        """
+        changes the node_set data to new_node_set
+        :param new_node_set:
+        :return:
+        """
+        self.node_set = new_node_set
 
     def set_arc_attributes_from_pandas(self):
         """
@@ -75,6 +82,15 @@ class MinCostFlow:
             self.arc_set.add((item[1][0],item[1][1]))
         return
 
+    def set_arc_capacity(self,new_arc_capacity):
+        self.arc_capacity = new_arc_capacity
+
+    def set_arc_cost(self,new_arc_cost):
+        self.arc_cost = new_arc_cost
+
+    def set_arc_set(self,new_arc_set):
+        self.arc_set = new_arc_set
+
     def set_trip_attributes_from_pandas(self):
         """
         Uses the pandas object created by pandas.read_csv('trips.csv') to populate:
@@ -86,6 +102,12 @@ class MinCostFlow:
             self.trip_net_demand[item[1][0], item[1][1]] = item[1][2]
         self.trip_set = set(self.trip_data['Trip'])
         return
+
+    def set_trip_net_demand(self,new_trip_net_demand):
+        self.trip_net_demand = new_trip_net_demand
+
+    def set_trip_set(self,new_trip_set):
+        self.trip_set = new_trip_set
 
     def createModel(self):
         """Create the pyomo model given the csv data."""
@@ -116,8 +138,8 @@ class MinCostFlow:
 
         # Flow Balance rule
         def flow_bal_rule(m, n,t):
-            lhs = sum(self.m.Y[(into,n),t] for (into,n) in self.m.arc_set ) \
-                  - sum(self.m.Y[(n,out),t] for (n,out) in self.m.arc_set )
+            lhs = sum(self.m.Y[(into,n),t] for into in self.m.node_set if (into,n) in self.m.arc_set ) \
+                  - sum(self.m.Y[(n,out),t] for out in self.m.node_set if (n,out) in self.m.arc_set )
             constr = (lhs == self.m.Net_demand_param[n,t])
             return  constr
 
@@ -128,7 +150,7 @@ class MinCostFlow:
         def joint_capacity_rule(m,i,j):
             return sum(self.m.Y[i,j,k] for k in self.m.trip_set) <= self.m.Capacity_param[i,j]
 
-        self.m.Capacity = pe.Constraint(self.m.arc_set,rule=joint_capacity_rule)
+        self.m.Capacity = pe.Constraint(self.m.arc_set,rule=joint_capacity_rule,)
 
         # # Upper bounds rule
         # def upper_bounds_rule(m, n1, n2):
@@ -157,9 +179,9 @@ class MinCostFlow:
                                options_string="mip_tolerances_integrality=1e-9 mip_tolerances_mipgap=0")
 
         if (results.solver.status != pyomo.opt.SolverStatus.ok):
-            logging.warning('Check solver not ok?')
+            pe.logger.warning('Check solver not ok?')
         if (results.solver.termination_condition != pyomo.opt.TerminationCondition.optimal):
-            logging.warning('Check solver optimality?')
+            pe.logger.warning('Check solver optimality?')
     def get_Var(self):
         """Get the variable value and put into dictionary Y"""
         Y={}
