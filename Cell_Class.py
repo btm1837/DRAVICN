@@ -19,12 +19,14 @@ class Cell:
     def __init__(self):
         #asdf
         #Cell ocupancy
-        data = pandas.read_csv(Cells.csv)
-        self.number_in_t0 = pandas.read_csv()
+        data = pandas.read_csv('Cells.csv')
+        self.number_in_t0 = ''
 
         self.cell_queue = collections.deque([])
-        self.free_flow_speed =
-        self.max_vehicles
+        self.free_flow_speed =''
+        self.max_vehicles = ''
+        self.reaction_time = ''
+        self.num_vehicle_types = ''
 
 
 

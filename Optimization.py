@@ -30,7 +30,7 @@ class MinCostFlow:
         self.arc_data = pandas.read_csv('arcs.csv')
 
         # Read in the trips file
-        self.trip_data = pandas.read_csv('trips.csv')
+        self.trip_data = pandas.read_csv('trips_opt_table.csv')
 
         # Create Node_set
         self.node_set = set(self.node_data['Node'])
@@ -44,7 +44,6 @@ class MinCostFlow:
         self.arc_capacity = {}
         self.arc_cost = {}
         self.arc_set = set()
-
         self.set_trip_attributes_from_pandas()
         self.set_arc_attributes_from_pandas()
         self.set_node_set_from_pandas()
@@ -93,7 +92,7 @@ class MinCostFlow:
 
     def set_trip_attributes_from_pandas(self):
         """
-        Uses the pandas object created by pandas.read_csv('trips.csv') to populate:
+        Uses the pandas object created by pandas.read_csv('trips_opt_table.csv') to populate:
         self.trip_net_demand
         self.trip_set
         :return:
