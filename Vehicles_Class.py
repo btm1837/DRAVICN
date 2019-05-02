@@ -4,6 +4,8 @@ class Vehicle:
     Used for defining individual vehicle attributes
     """
     def __init__(self,generator):
+
+
         # Vehicle tracking attributes:
         self.vehicle_ID = ''
         self.origin = ''

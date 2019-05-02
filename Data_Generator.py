@@ -26,6 +26,25 @@ class Data:
         self.trip_set=set()
         self.trip_net_demand = {}
 
+        # vehicle data parameters
+        self.vehicle_data = pandas.read_csv('vehicles.csv')
+        self.vehicle_list = []
+
+        # Intersection Control Policy Parameters
+        self.incoming_links = set()
+        self.outgoing_links = set()
+        self.list_conflict_regions = set()
+        self.lists_cr_from_arci_to_arcj = {}
+        self.intersections_set = set()
+        self.intersection_incoming_links = {}
+        self.intersection_outgoing_links = {}
+        self.intersection_
+
+
+
+
+
+
         # experiment data parameters
         self.exper_data = pandas.read_csv('Experiments.csv')
         self.exper_experiment_list = set(self.exper_data['Experiment'])
@@ -36,23 +55,17 @@ class Data:
         self.exper_cell_travel_time_calc = 'NA'
         self.exper_simulation_time_interval = 'NA'
         # Initialize to first experiment
-        self.set_experiment_values(self,1)
+        self.set_experiment_values(self,0)
 
-
-
-        #vehicle data parameters
-        self.vehicle_data = pandas.read_csv('vehicles.csv')
-        self.vehicle_list = []
 
     def set_experiment_values(self,experiment_number):
-        n=n-1
-        if n in self.exper_experiment_list:
-            self.exper_num = self.exper_data.iloc[n][0]
-            self.exper_coordination = self.exper_data.iloc[n][1]
-            self.exper_coordination_period = self.exper_data.iloc[n][2]
-            self.exper_demand_multiplier = self.exper_data.iloc[n][3]
-            self.exper_cell_travel_time_calc = self.exper_data.iloc[n][4]
-            self.exper_simulation_time_interval = self.exper_data.iloc[n][5]
+        if experiment_number in self.exper_experiment_list:
+            self.exper_num = self.exper_data.iloc[experiment_number][0]
+            self.exper_coordination = self.exper_data.iloc[experiment_number][1]
+            self.exper_coordination_period = self.exper_data.iloc[experiment_number][2]
+            self.exper_demand_multiplier = self.exper_data.iloc[experiment_number][3]
+            self.exper_cell_travel_time_calc = self.exper_data.iloc[experiment_number][4]
+            self.exper_simulation_time_interval = self.exper_data.iloc[experiment_number][5]
         self.create_data_for_experiment()
         return
 
@@ -71,7 +84,8 @@ class Data:
         #Need to iterate over vehicles in trip set or make vehicle ids here
         # vehicle ID needs to be the same as trip ID
         for item in self.trip_data.iterrows():
-            number_of_vehicles = ((item[1][2])/(120) ) * self.exper_demand_multiplier
+            #calculate the number of vehicles assigned to a given trip
+            number_of_vehicles = (((item[1][2])/(3600) ) * self.exper_simulation_time_interval)* self.exper_demand_multiplier
             for trip in range(number_of_vehicles):
                 temp = 'T' + str(trip)
                 self.trip_set.add(temp)
@@ -82,7 +96,6 @@ class Data:
                         self.trip_net_demand[item[1][1], temp] = 1
                     else:
                         self.trip_net_demand[node,temp]=0
-
         return
 
     def set_arc_attributes_from_pandas(self):
