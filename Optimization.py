@@ -185,7 +185,8 @@ class MinCostFlow:
         """Get the variable value and put into dictionary Y"""
         Y={}
         for var in sp.i.Y:
-            Y[var]=sp.i.Y[var].value
+            if sp.i.Y[var].value == 1:
+                Y[var]=sp.i.Y[var].value
         return Y
 
 

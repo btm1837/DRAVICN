@@ -31,7 +31,7 @@ class Cell:
 
         # Number of vehicles entering cell from cell i-1 at time t
         # Y
-        self.numeber_entering_cell = ''
+        self.number_entering_cell_from_arc = {}
 
         #Queue of vehicles in the cell
         self.cell_queue = collections.deque([])
@@ -43,6 +43,7 @@ class Cell:
         self.num_vehicle_types = ''
         self.start_node = 'NA'
         self.end_node = 'NA'
+        self.num_lanes = 1
 
     #Getters Block
     def get__(self):
@@ -53,3 +54,13 @@ class Cell:
         #asdf
 
     #Methods
+
+
+# Subclass of Intersection Cells
+class Intersection_Cell (Cell):
+    """
+    specific subclass for intersection cells
+    """
+
+    def __init__(self):
+        self.number_entering_cell_from_i = {}
