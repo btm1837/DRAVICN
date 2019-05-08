@@ -44,6 +44,7 @@ class MinCostFlow:
         self.arc_capacity = {}
         self.arc_cost = {}
         self.arc_set = set()
+
         self.set_trip_attributes_from_pandas()
         self.set_arc_attributes_from_pandas()
         self.set_node_set_from_pandas()

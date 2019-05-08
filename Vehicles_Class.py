@@ -33,12 +33,12 @@ class Vehicle:
         self.reaction_time = ''
 
         # transaction manager tracking
-        self.cell_time_in = ''
-        self.cell_time_out =''
+        self.cell_time_in = 0
+        self.cell_time_out = 0
 
         # is autonmous
         # all vehicles assumed autonmous for this simulation
-        self.is_autonomous = 1
+        self.is_autonomous = True
 
         # Time keeping
         self.time_in_sim = ''

@@ -38,7 +38,9 @@ def ICP(intersection_list,intersection_cells_list,num_lanes,num_vehicles_from_i_
         i_cell = cell_list[v.turning_move[0]]
         j_cell = cell_list[v.turning_move[1]]
         if can_move(v,i_cell,j_cell):
-            j_cell.num
+            j_cell.number_entering_cell_from_arc[v.turning_move[0]] = j_cell.number_entering_cell_from_arc[v.turning_move[0]] +1
+            if v.is_autonomous:
+                for conflict_region in
 
 
 def can_move(v):

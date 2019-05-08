@@ -38,14 +38,22 @@ class Data:
         self.set_vehicle_type_dictionary()
 
         # Intersection Control Policy Parameters
-        self.incoming_links = set()
-        self.outgoing_links = set()
-        self.list_conflict_regions = set()
-        self.lists_cr_from_arci_to_arcj = {}
+        self.incoming_cells = set()
+        self.outgoing_cells = set()
+        self.list_conflict_regions = set(['cr1', 'cr2', 'cr3', 'cr4'])
         self.intersections_set = set()
-        self.intersection_incoming_links = {}
-        self.intersection_outgoing_links = {}
-
+        self.intersection_data_file = pandas.read_csv('Intersection.csv')
+        self.intersection_data_dictionary = {}
+        # Dictionary that describes the cr corresponding to an incoming or outgoing arc
+        self.cr_for_arc_i = {}
+        # Subset of CRs for incoming link i to out going link j
+        self.cr_subset_from_i_to_j = {}
+        # Conflict Region Capacity
+        self.cr_capacity = {}
+        # Capacity of turning movement
+        self.turning_movement_capacity = {}
+        # Equivialent flow entering conflict region
+        self.cr_equivalent_flow = {}
 
 
         # experiment data parameters
@@ -206,4 +214,11 @@ class Data:
                 # define arcs on the trip's optimal path
                 if (arc[0],arc[1],trip) in routing_from_opt:
                     self.vehicle_routes[trip].add(arc)
+        return
+
+# Setting intersection data sets to correct values
+    def set_intersection_data_dictionary(self):
+        for item in self.intersection_data_file.iterrows():
+            self.intersection_data_dictionary[item[1][0]]=(item[1][1],item[1][2],item[1][3],item[1][4],\
+                                                           item[1][5],item[1][6],item[1][7],item[1][8])
         return

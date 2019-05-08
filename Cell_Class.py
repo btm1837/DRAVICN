@@ -19,15 +19,15 @@ class Cell:
     def __init__(self):
         #asdf
         #Cell ocupancy
-        data = pandas.read_csv('Cells.csv')
+        self.data = pandas.read_csv('Cells.csv')
 
         #Cell ocupancy at in time period prior to CTM equaltions, initial
         # n_i(t0)
-        self.number_in_t_i = ''
+        self.number_in_t_i = 0
 
         #Number of vehicles in the cell after CTM equations, final
         # n_i(t1)
-        self.number_in_t_f = ''
+        self.number_in_t_f = 0
 
         # Number of vehicles entering cell from cell i-1 at time t
         # Y
