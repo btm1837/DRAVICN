@@ -20,7 +20,7 @@ class Data:
         self.arc_set=set()
 
         # initiate the cell list
-        self.cell_list = []
+        self.cell_dict = []
 
         # Trip data parameters
         self.trip_data=pandas.read_csv('trips.csv')
@@ -33,7 +33,7 @@ class Data:
         # vehicle data parameters
         self.vehicle_data = pandas.read_csv('vehicles.csv')
         self.initial_vehicle_routes = set()
-        self.vehicle_list = []
+        self.vehicle_dict = {}
         self.vehicle_type_dictionary={}
         self.set_vehicle_type_dictionary()
 
@@ -61,10 +61,10 @@ class Data:
         self.exper_experiment_list = set(self.exper_data['Experiment'])
         self.exper_num='NA'
         self.exper_coordination = 'NA'
-        self.exper_coordination_period = 'NA'
-        self.exper_demand_multiplier = 'NA'
+        self.exper_coordination_period = 0
+        self.exper_demand_multiplier = 0
         self.exper_cell_travel_time_calc = 'NA'
-        self.exper_simulation_time_interval = 'NA'
+        self.exper_simulation_time_interval = 0
         # Initialize to first experiment
         self.set_experiment_values(0)
 

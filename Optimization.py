@@ -21,7 +21,7 @@ class MinCostFlow:
     that specify an arc start node, an arc end node, a cost for the arc,
     and upper and lower bounds for the flow."""
 
-    def __init__(self, nodesfile, arcsfile):
+    def __init__(self, node_file, arc_file, trip_file):
         """Read in the csv data."""
         # Read in the nodes file
         self.node_data = pandas.read_csv('nodes.csv')
@@ -185,14 +185,14 @@ class MinCostFlow:
     def get_Var(self):
         """Get the variable value and put into dictionary Y"""
         Y={}
-        for var in sp.i.Y:
-            if sp.i.Y[var].value == 1:
-                Y[var]=sp.i.Y[var].value
+        for var in self.i.Y:
+            if self.i.Y[var].value == 1:
+                Y[var]=self.i.Y[var].value
         return Y
 
 
-if __name__ == '__main__':
-    sp = MinCostFlow('nodes.csv', 'arcs.csv')
-    sp.solve()
-    print('\n\n---------------------------')
-    print('Cost: ', sp.i.OBJ())
+#if __name__ == '__main__':
+ #   sp = MinCostFlow('nodes.csv', 'arcs.csv')
+  #  sp.solve()
+   # print('\n\n---------------------------')
+    #print('Cost: ', sp.i.OBJ())
