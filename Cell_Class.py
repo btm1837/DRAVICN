@@ -16,11 +16,8 @@ class Cell:
 
     """
 
-    def __init__(self):
-        #asdf
-        #Cell ocupancy
-        self.data = pandas.read_csv('Cells.csv')
-
+    def __init__(self,cell_id,start_node,end_node,free_flow_speed,max_vehicles,cell_length,cell_travel_time):
+        self.cell_id = cell_id
         #Cell ocupancy at in time period prior to CTM equaltions, initial
         # n_i(t0)
         self.number_in_t_i = 0
@@ -37,30 +34,22 @@ class Cell:
         self.cell_queue = collections.deque([])
 
         # uf , speed if vehicles are moving freely
-        self.free_flow_speed =''
-        self.max_vehicles = ''
-        self.reaction_time = ''
-        self.num_vehicle_types = ''
-        self.start_node = 'NA'
-        self.end_node = 'NA'
+        self.free_flow_speed =free_flow_speed
+        self.max_vehicles = max_vehicles
+        self.length = cell_length
+        self.num_vehicle_types = 0
+        self.start_node = start_node
+        self.end_node = end_node
         self.num_lanes = 1
 
-    #Getters Block
+        # for transaction manager
+        self.cell_travel_time = cell_travel_time
+    # Getters Block
     def get__(self):
-        #asdf
-
-    #Setters Block
+        # set something
+        i = 0
+    # Setters Block
     def set_(self):
-        #asdf
-
-    #Methods
-
-
-# Subclass of Intersection Cells
-class Intersection_Cell (Cell):
-    """
-    specific subclass for intersection cells
-    """
-
-    def __init__(self):
-        self.number_entering_cell_from_i = {}
+        # do something
+        i=0
+    # Methods

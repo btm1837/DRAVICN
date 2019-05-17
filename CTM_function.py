@@ -1,5 +1,4 @@
-!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 """
 Created on Wed Dec 12 15:04:24 2018
 
@@ -25,7 +24,8 @@ Created on Wed Dec 12 15:04:24 2018
 # yim_t# - vehicles moving from cell i-1 into cell i of class m
 # yi_t# - vehicles moving from cell i-1 to cell i of all classes
 
-def CellTransmissionModel(M,nim_t0,ni_t0,uif,Ni,lm,del_tm,I,t):
+def cell_transmission_model(vehicle_total_num_types, nim_t0, number_in_time_i, free_flow_speed,
+                            max_vehicles, vehicle_length, reaction_time, total_num_cells, current_time_period):
     #Creating Empty Lists to hold variables
     wi_t=[]
     Qi_t=[]
@@ -33,21 +33,23 @@ def CellTransmissionModel(M,nim_t0,ni_t0,uif,Ni,lm,del_tm,I,t):
     yi_t1=[]
     nim_t1=[]
     ni_t1=[]
-    for i in range(I):
+    for i in range(total_num_cells):
         #Calculate Backwards Wave Speed
-        wi_t[i]=sum((lm*del_tm[:])/(nim_t0[i,:]/ni_t0[i]))
+        wi_t[i]=sum((vehicle_length * reaction_time[:]) / (nim_t0[i, :] / number_in_time_i[i]))
         #Calculate maximum flow through cell i
-        Qi_t[i]=uif[i]*(1/(uif[i]*sum((nim_t0[i,:]/ni_t0[i])*del_tm[:]+lm)))
-        for m in range(M):
+        Qi_t[i]= free_flow_speed[i] * (1 / (free_flow_speed[i] * sum((nim_t0[i, :] / number_in_time_i[i])
+                                                                     * reaction_time[:] + vehicle_length)))
+        for m in range(vehicle_total_num_types):
             #calculate vehicles from cell i-1 moving into cell i of class m
-            yim_t1[i,m] = min([nim_t0[i-1,m],(nim_t0[i-1,m]/ni_t0[i-1])*Qi_t[i],
-                              (nim_t0[i-1,m]/ni_t0[i-1])*(wi_t[i]/uif[i])*(Ni[i]-sum(nim_t0[i,:]))])
+            yim_t1[i,m] = min([nim_t0[i-1,m], (nim_t0[i-1,m] / number_in_time_i[i - 1]) * Qi_t[i],
+                               (nim_t0[i-1,m] / number_in_time_i[i - 1]) * (wi_t[i] / free_flow_speed[i])
+                               * (max_vehicles[i] - sum(nim_t0[i, :]))])
         #Calculate the vehicles from cell i-1 moving into cell i
         yi_t1[i]=sum(yim_t1[i,:])
-    for i in range(I):
-        for m in range(M):
+    for i in range(total_num_cells):
+        for m in range(vehicle_total_num_types):
             #number of vehilces in cell i at next time t+1 of class m
-            nim_t1[i,m] = nim_t0[i,m] + yim_t1[i,m] - yim_t1[i+1,t]
+            nim_t1[i,m] = nim_t0[i,m] + yim_t1[i,m] - yim_t1[i + 1, current_time_period]
         #number of vehicles in cell i at next time t+1
         ni_t1[i] = sum(nim_t1[i,:])
     return(yi_t1,nim_t1)

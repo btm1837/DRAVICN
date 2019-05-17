@@ -60,7 +60,7 @@ class Vehicle:
 
     def set_next_cell_location(self):
         for item in self.route:
-            if self.current_cell_location[1] == item[0]
+            if self.current_cell_location[1] == item[0]:
                 self.next_cell_location = item
 
     def set_turning_move(self):

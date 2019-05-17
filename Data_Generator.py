@@ -1,14 +1,15 @@
 import pandas
 import numpy as np
+import Cell_Class
+import Vehicles_Class
 
-
-class Data:
+class Data():
     """
     Takes Experimental set up intput values and creates attributes to be used by the models for initial values
 
 
     """
-    def __init__(self):
+    def __init__(self,arc_file,node_file,trip_file,vehicle_file,cell_file,experiment_file):
         """ create values based on input parameters"""
         # node set
         self.node_set = set()
@@ -20,15 +21,16 @@ class Data:
         self.arc_set=set()
 
         # initiate the cell list
-        self.cell_dict = []
+        self.cell_dict = {}
+
 
         # Trip data parameters
         self.trip_data=pandas.read_csv('trips.csv')
         self.trip_set=set()
         self.trip_net_demand = {}
-        self.trip_vehicle_type = {}
-        self.total_initial_trips= 0
-        self.total_current_trips=0
+        self.trip_vehicle_type_origin_dest = {}
+        self.trip_total_initial_trips= 0
+        self.trip_total_current_trips=0
 
         # vehicle data parameters
         self.vehicle_data = pandas.read_csv('vehicles.csv')
@@ -36,11 +38,12 @@ class Data:
         self.vehicle_dict = {}
         self.vehicle_type_dictionary={}
         self.set_vehicle_type_dictionary()
+        self.vehicle_total_num_types = len(self.vehicle_type_dictionary)
 
         # Intersection Control Policy Parameters
         self.incoming_cells = set()
         self.outgoing_cells = set()
-        self.list_conflict_regions = set(['cr1', 'cr2', 'cr3', 'cr4'])
+        self.list_conflict_regions = {'cr1', 'cr2', 'cr3', 'cr4'}
         self.intersections_set = set()
         self.intersection_data_file = pandas.read_csv('Intersection.csv')
         self.intersection_data_dictionary = {}
@@ -83,6 +86,7 @@ class Data:
         self.set_node_set_from_pandas()
         self.set_arc_attributes_from_pandas()
         self.set_trip_attributes_initial()
+        self.create_cell_dict()
         return
 
     def set_trip_attributes_initial(self):
@@ -101,7 +105,8 @@ class Data:
                 # Creating the Trip optimization matrix
                 temp = 'T' + str(trip)
                 self.trip_set.add(temp)
-                self.trip_vehicle_type[temp] = item[1][3]
+                self.trip_vehicle_type_origin_dest[temp] = (item[1][3], item[1][0],item[1][1])
+
                 for node in self.node_set:
                     if item[1][0] == node:
                         # A demand node on the trip
@@ -112,8 +117,8 @@ class Data:
                     else:
                         # all other nodes on the trip matrix
                         self.trip_net_demand[node,temp]=0
-            self.total_initial_trips = trip
-            self.total_current_trips = self.total_initial_trips+1
+            self.trip_total_initial_trips = trip
+            self.trip_total_current_trips = self.trip_total_initial_trips + 1
         return
 
 ######################################################################
@@ -126,18 +131,18 @@ class Data:
         MIGHT NOT BE NEEDED
         :return:
         """
-        for trip in range(self.total_current_trips,self.total_current_trips+self.total_initial_trips):
+        for trip in range(self.trip_total_current_trips, self.trip_total_current_trips + self.trip_total_initial_trips):
             temp = 'T' + str(trip)
             #add new trips to trip_set
             self.trip_set.add(temp)
             #number equivalent to this initial trip generated
-            trip_equivalent = trip-self.total_current_trips + 1
+            trip_equivalent = trip - self.trip_total_current_trips + 1
             temp2 = 'T' + str(trip_equivalent)
-            self.trip_vehicle_type[temp] = self.trip_vehicle_type[temp2]
+            self.trip_vehicle_type_origin_dest[temp] = self.trip_vehicle_type_origin_dest[temp2]
             for node in self.node_set:
                 self.trip_net_demand[node,temp] = self.trip_net_demand[node,temp2]
 
-        self.total_current_trips = trip
+        self.trip_total_current_trips = trip
 ######################################################################################
 
     def set_arc_attributes_from_pandas(self):
@@ -153,6 +158,7 @@ class Data:
             self.arc_capacity[item[1][0],item[1][1]]=item[1][3]
             self.arc_cost[item[1][0],item[1][1]]=item[1][2]
             self.arc_set.add((item[1][0],item[1][1]))
+
         return
 
     def set_node_set_from_pandas(self):
@@ -174,29 +180,29 @@ class Data:
             self.vehicle_type_dictionary[item[1][0]]=(item[1][1],item[1][2])
         return
 
-    def create_initial_vehicle_list(self):
-        """
-        Creates the initial list of a all vehicles on the network and makes them objects with propper data
-
-        :return:
-        """
 
 
-    def initial_routing(self,routing_from_opt):
+    def create_vehicle_dict(self,routing_from_opt):
         """
         Sets the intitial routing of vehicles from the optimization variable data
         :param routing_from_opt:
         :return:
         """
-        self.vehicle_routes = {}
-        self.vehicle_list = []
+        #self.vehicle_routes = {}
         for trip in self.trip_set:
             #add vehicles to vehicle list
-            self.vehicle_routes[trip]=set()
+            route = set()
+            #self.vehicle_routes[trip]=set()
             for arc in self.arc_set:
                 #define arcs on the trip's optimal path
                 if (arc[0],arc[1],trip) in routing_from_opt:
-                    self.vehicle_routes[trip].add(arc)
+                    #self.vehicle_routes[trip].add(arc)
+                    route.add(arc)
+            self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
+                                                             make=self.vehicle_type_dictionary[self.trip_vehicle_type_origin_dest[trip][0]][0],
+                                                             origin=self.trip_vehicle_type_origin_dest[trip][1],
+                                                             destination=self.trip_vehicle_type_origin_dest[trip][2],
+                                                             routing_arcs=route)
         return
 
     def intitial_routing_new_trips(self,new_trip_set,routing_from_opt):
@@ -222,3 +228,42 @@ class Data:
             self.intersection_data_dictionary[item[1][0]]=(item[1][1],item[1][2],item[1][3],item[1][4],\
                                                            item[1][5],item[1][6],item[1][7],item[1][8])
         return
+
+    def create_cell_dict(self):
+        for item in self.arc_data.iterrows():
+            cell_id = (item[1][0],item[1][1])
+            self.cell_dict[cell_id] = Cell_Class.Cell(cell_id=cell_id,
+                                                      start_node=item[1][0],
+                                                      end_node=item[1][1],
+                                                      free_flow_speed=item[1][5],
+                                                      max_vehicles=item[1][3],
+                                                      cell_length=item[1][4],
+                                                      cell_travel_time=item[1][2])
+        return
+
+
+
+    ####### GETTER BLOCK
+
+    def get_node_set(self):
+        return self.node_set
+
+    def get_arc_set(self):
+        return self.arc_set
+
+    def get_arc_cost(self):
+        return self.arc_cost
+
+    def get_arc_capacity(self):
+        return self.arc_capacity
+
+    def get_trip_set(self):
+        return self.trip_set
+
+    def get_trip_net_demand(self):
+        return self.trip_net_demand
+    def get_vehicle_dict(self,trip_opt_routes):
+        self.create_vehicle_dict(routing_from_opt=trip_opt_routes)
+        return self.vehicle_dict
+    def get_cell_dict(self):
+        return self.cell_dict
