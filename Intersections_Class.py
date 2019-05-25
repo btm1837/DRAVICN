@@ -34,6 +34,12 @@ class Intersection:
         #Equivialent flow entering cr
         self.cr_equivalent_flow = {}
 
+        self.set_cr_for_arc_i()
+        self.set_incoming_cells()
+        self.set_outgoing_cells()
+        self.set_intitial_cr_subset_from_i_to_j()
+
+
     def set_cr_for_arc_i(self):
         self.cr_for_arc_i[self.intersection_data[0]] =  'cr1'
         self.cr_for_arc_i[self.intersection_data[1]] =  'cr2'

@@ -2,6 +2,7 @@ import pandas
 import numpy as np
 import Cell_Class
 import Vehicles_Class
+import Intersections_Class
 
 class Data():
     """
@@ -9,7 +10,7 @@ class Data():
 
 
     """
-    def __init__(self,arc_file,node_file,trip_file,vehicle_file,cell_file,experiment_file):
+    def __init__(self,arc_file,node_file,trip_file,vehicle_file,cell_file,experiment_file,cell_iteration_list_file):
         """ create values based on input parameters"""
         # node set
         self.node_set = set()
@@ -22,7 +23,8 @@ class Data():
 
         # initiate the cell list
         self.cell_dict = {}
-
+        self.cell_iteration_pandas_data = pandas.read_csv(cell_iteration_list_file)
+        self.cell_iteration_dict = {}
 
         # Trip data parameters
         self.trip_data=pandas.read_csv('trips.csv')
@@ -47,16 +49,7 @@ class Data():
         self.intersections_set = set()
         self.intersection_data_file = pandas.read_csv('Intersection.csv')
         self.intersection_data_dictionary = {}
-        # Dictionary that describes the cr corresponding to an incoming or outgoing arc
-        self.cr_for_arc_i = {}
-        # Subset of CRs for incoming link i to out going link j
-        self.cr_subset_from_i_to_j = {}
-        # Conflict Region Capacity
-        self.cr_capacity = {}
-        # Capacity of turning movement
-        self.turning_movement_capacity = {}
-        # Equivialent flow entering conflict region
-        self.cr_equivalent_flow = {}
+        self.intersection_dict = {}
 
 
         # experiment data parameters
@@ -68,6 +61,7 @@ class Data():
         self.exper_demand_multiplier = 0
         self.exper_cell_travel_time_calc = 'NA'
         self.exper_simulation_time_interval = 0
+        self.exper_total_sim_time = 0
         # Initialize to first experiment
         self.set_experiment_values(0)
 
@@ -86,7 +80,10 @@ class Data():
         self.set_node_set_from_pandas()
         self.set_arc_attributes_from_pandas()
         self.set_trip_attributes_initial()
+        self.set_intersection_data_dictionary()
+        self.set_intersection_dict()
         self.create_cell_dict()
+        self.set_cell_iteration_dict()
         return
 
     def set_trip_attributes_initial(self):
@@ -229,6 +226,12 @@ class Data():
                                                            item[1][5],item[1][6],item[1][7],item[1][8])
         return
 
+    def set_intersection_dict(self):
+        for a in self.intersection_data_dictionary.keys():
+            self.intersection_dict[a] = Intersections_Class.Intersection(located_at_node=a,
+                                                                         intersection_data=self.intersection_data_dictionary[a])
+
+
     def create_cell_dict(self):
         for item in self.arc_data.iterrows():
             cell_id = (item[1][0],item[1][1])
@@ -241,6 +244,9 @@ class Data():
                                                       cell_travel_time=item[1][2])
         return
 
+    def set_cell_iteration_dict(self):
+        for item in self.cell_iteration_pandas_data.iterrows():
+            self.cell_iteration_dict[item[1][0]] = item[1][2].split(" ")
 
 
     ####### GETTER BLOCK
@@ -262,8 +268,12 @@ class Data():
 
     def get_trip_net_demand(self):
         return self.trip_net_demand
-    def get_vehicle_dict(self,trip_opt_routes):
-        self.create_vehicle_dict(routing_from_opt=trip_opt_routes)
+    def get_vehicle_dict(self,routing_from_opt):
+        self.create_vehicle_dict(routing_from_opt=routing_from_opt)
         return self.vehicle_dict
     def get_cell_dict(self):
         return self.cell_dict
+    def get_intersection_dict(self):
+        return self.intersection_dict
+    def get_cell_iteration_dict(self):
+        return self.cell_iteration_dict

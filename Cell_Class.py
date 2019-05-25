@@ -42,8 +42,18 @@ class Cell:
         self.end_node = end_node
         self.num_lanes = 1
 
+        # cell proceeding intersection
+        self.is_before_intersection = bool
+
+        # next cell
+        self.next_cell = ''
+
         # for transaction manager
         self.cell_travel_time = cell_travel_time
+
+        # types of vehicles in the cell
+        self.vehicle_make_dict = {}
+
     # Getters Block
     def get__(self):
         # set something
@@ -53,3 +63,7 @@ class Cell:
         # do something
         i=0
     # Methods
+    def get_vehicle_atributes_set(self):
+        for vehicle in self.cell_queue:
+            self.vehicle_make_dict[vehicle.make] = (vehicle.reaction_time,vehicle.length)
+        return (self.vehicle_make_dict)
