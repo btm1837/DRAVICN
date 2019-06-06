@@ -54,17 +54,38 @@ def cell_transmission_model(vehicle_total_num_types, nim_t0, number_in_time_i, f
         ni_t1[i] = sum(nim_t1[i,:])
     return(yi_t1,nim_t1)
 
-def calc_backwards_wave_speed(vehicle_make_dict):
+def calc_backwards_wave_speed(cell,vehicle_make_dict,vehicle_length):
     backwards_wave_speed = 0
-    for vehicle_types in vehicle_make_dict.keys():
-        backwards_wave_speed = backwards_wave_speed + \
-            
+    backwards_wave_speed_sum=0
+    for vehicle_type in vehicle_make_dict.keys()
+        backwards_wave_speed_sum = backwards_wave_speed_sum + (
+            ( cell.number_in_t_i_make_dict[vehicle_type] / cell.length)/
+            (cell.number_in_t_i / cell.length)
+                               )*vehicle_make_dict[vehicle_type]
+    backwards_wave_speed = vehicle_length/backwards_wave_speed_sum
+    return backwards_wave_speed
 
 
-        backwards_wave_speed = sum((vehicle_length * reaction_time[:]) / (nim_t0[i, :] / number_in_time_i[i]))
+def calc_max_flow(cell,vehicle_make_dict,vehicle_length):
+    max_flow = 0
+    max_flow_sum = 0
+    # summation
+    for vehicle_type in vehicle_make_dict.keys():
+        max_flow_sum = max_flow_sum + (
+            (cell.number_in_t_i_make_dict[vehicle_type]/cell.length)/
+            (cell.number_in_t_i[vehicle_type]/cell.length)
+        ) * vehicle_make_dict[vehicle_type]
+    max_flow_calc = (1/(cell.free_flow_speed * max_flow_sum))
+    max_flow = cell.free_flow_speed * max_flow_calc
+    return max_flow
 
-def ctm_function(cell_dict,cell_iteration_dict):
+def calc_vehicles_moving_cells_type():
+    item1 =
+
+def ctm_function(cell_dict,cell_iteration_dict,vehicle_make_dict,exper_vehicle_length):
     # function to use to evaluate CTM
     for start_cell in cell_iteration_dict.keys():
         for cell in cell_iteration_dict[start_cell]:
 
+            backwards_wave_speed = calc_backwards_wave_speed(cell,vehicle_make_dict,exper_vehicle_length)
+            max_flow = calc_max_flow(cell,vehicle_make_dict,exper_vehicle_length)

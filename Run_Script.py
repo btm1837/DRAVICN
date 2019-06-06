@@ -29,7 +29,7 @@ cell_iteration_dict = data.get_cell_iteration_dict()
 
 
 # Single Experiment loop
-for time in range(0,3601,data.exper_simulation_time_interval):
+for my_sim_time in range(0,3601,int(data.exper_simulation_time_interval)):
     #run optimization model to get initial vehicle routing
     optimization_model = Optimization.MinCostFlow(node_set=data.get_node_set(),
                                                 trip_set=data.get_trip_set(),
@@ -40,13 +40,11 @@ for time in range(0,3601,data.exper_simulation_time_interval):
     optimization_model.solve()
     print('\n\n---------------------------')
     print('Cost: ', optimization_model.i.OBJ())
+
     optimization_model.get_Var()
 
     # create initial vehicle dictionary list
     vehicle_dict = data.get_vehicle_dict(routing_from_opt = optimization_model.optimal_routes)
-
-
-
 
 
 end_time = time.time()

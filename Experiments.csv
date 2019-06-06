@@ -1,2 +1,2 @@
-Experiment,Coordination,Coordination_Period,Demand_Multiplier,Cell_Travel_Time_Calc,Simulation_Time_Interval
-0,1,1,1,0,30
+Experiment,Coordination,Coordination_Period,Demand_Multiplier,Cell_Travel_Time_Calc,Simulation_Time_Interval,vehicle_length
+0,1,1,1,0,30,0.0037

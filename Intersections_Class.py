@@ -7,7 +7,7 @@ class Intersection:
     """
     def __init__(self,located_at_node,intersection_data):
         #Node that the intersection is located at
-        self.intersection_data = []
+        self.intersection_data = intersection_data
         self.located_at_node = located_at_node
 
         # the set of incoming links

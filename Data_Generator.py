@@ -62,6 +62,7 @@ class Data():
         self.exper_cell_travel_time_calc = 'NA'
         self.exper_simulation_time_interval = 0
         self.exper_total_sim_time = 0
+        self.exper_vehicle_length = 0
         # Initialize to first experiment
         self.set_experiment_values(0)
 
@@ -73,6 +74,7 @@ class Data():
             self.exper_demand_multiplier = self.exper_data.iloc[experiment_number][3]
             self.exper_cell_travel_time_calc = self.exper_data.iloc[experiment_number][4]
             self.exper_simulation_time_interval = self.exper_data.iloc[experiment_number][5]
+            self.exper_vehicle_length = self.exper_data.iloc[experiment_number][6]
         self.create_data_for_experiment()
         return
 
@@ -170,11 +172,12 @@ class Data():
     def set_vehicle_type_dictionary(self):
         """
         Creates a dictionary for all vehicle type attributes based on manufacterer/type
-
+        key = vehicle make number
+        values = (reaction time)
         :return:
         """
         for item in self.vehicle_data.iterrows():
-            self.vehicle_type_dictionary[item[1][0]]=(item[1][1],item[1][2])
+            self.vehicle_type_dictionary[item[1][0]]=item[1][1]
         return
 
 
@@ -196,7 +199,7 @@ class Data():
                     #self.vehicle_routes[trip].add(arc)
                     route.add(arc)
             self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
-                                                             make=self.vehicle_type_dictionary[self.trip_vehicle_type_origin_dest[trip][0]][0],
+                                                             make=self.vehicle_type_dictionary[self.trip_vehicle_type_origin_dest[trip][0]],
                                                              origin=self.trip_vehicle_type_origin_dest[trip][1],
                                                              destination=self.trip_vehicle_type_origin_dest[trip][2],
                                                              routing_arcs=route)
