@@ -32,7 +32,7 @@ optimization_model.solve()
 print('\n\n---------------------------')
 print('Cost: ', optimization_model.i.OBJ())
 optimization_model.get_Var()
-vehicle_dict = data.get_vehicle_dict(routing_from_opt=optimization_model.optimal_routes)
+vehicle_dict = data.get_vehicle_dict(trip_opt_routes=optimization_model.optimal_routes)
 cell_dict = data.get_cell_dict()
 
 

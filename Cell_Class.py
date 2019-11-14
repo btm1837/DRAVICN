@@ -31,6 +31,8 @@ class Cell:
         self.number_entering_cell_from_arc = {}
 
         #Queue of vehicles in the cell
+        # left of queue is end of deque to add vehicles to left use  .appendleft(vehicle)
+        # right end is the front to remove on right use a = .pop to get vehicle a
         self.cell_queue = collections.deque([])
 
         # uf , speed if vehicles are moving freely
