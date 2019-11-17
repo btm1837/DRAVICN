@@ -7,7 +7,7 @@ class Intersection:
     """
     def __init__(self,located_at_node,intersection_data):
         #Node that the intersection is located at
-        self.intersection_data = []
+        self.intersection_data = intersection_data
         self.located_at_node = located_at_node
 
         # the set of incoming links
@@ -33,6 +33,12 @@ class Intersection:
 
         #Equivialent flow entering cr
         self.cr_equivalent_flow = {}
+
+        self.set_cr_for_arc_i()
+        self.set_incoming_cells()
+        self.set_outgoing_cells()
+        self.set_intitial_cr_subset_from_i_to_j()
+
 
     def set_cr_for_arc_i(self):
         self.cr_for_arc_i[self.intersection_data[0]] =  'cr1'
