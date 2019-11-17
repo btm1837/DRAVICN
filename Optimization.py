@@ -3,7 +3,8 @@ import pandas
 import numpy as np
 import pyomo.opt
 import pyomo.environ as pe
-import gurobipy
+
+# import gurobipy
 
 class MinCostFlow:
     """This class implements a standard min-cost-flow model.
@@ -143,8 +144,8 @@ class MinCostFlow:
         return
 
 
-#if __name__ == '__main__':
- #   sp = MinCostFlow('nodes.csv', 'arcs.csv')
-  #  sp.solve()
-   # print('\n\n---------------------------')
-    #print('Cost: ', sp.i.OBJ())
+if __name__ == '__main__':
+    sp = MinCostFlow('nodes.csv', 'arcs.csv')
+    sp.solve()
+    print('\n\n---------------------------')
+    print('Cost: ', sp.i.OBJ())

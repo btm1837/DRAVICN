@@ -25,7 +25,8 @@ def ICP(intersection_list,intersection_cells_list,num_lanes,num_vehicles_from_i_
             # For every lane in the incoming cell
             for i in range(len(incoming_cell.num_lanes)):
                 # Remove a vehicle from the cell and add it to the list V
-                V.append(incoming_cell.cell_queue.popleft())
+                V.append(incoming_cell.cell_queue.pop())
+            # For all outgoing cells in the the intersection
             for outgoing_cell in intersection.outgoing_cells:
                 # set the y or number entering the outgoing cell from the incoming cell to 0
                 outgoing_cell.number_entering_cell_from_arc[incoming_cell] = 0
@@ -45,7 +46,8 @@ def ICP(intersection_list,intersection_cells_list,num_lanes,num_vehicles_from_i_
 
 def can_move(v):
 
-
+    # must return TRUE if the vehicle can move
+    # False otherwise
     return
 
     incoming_links = self.incoming_links
