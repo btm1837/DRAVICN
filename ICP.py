@@ -30,18 +30,18 @@ def ICP(intersection_list,intersection_cells_list,num_lanes,num_vehicles_from_i_
             for outgoing_cell in intersection.outgoing_cells:
                 # set the y or number entering the outgoing cell from the incoming cell to 0
                 outgoing_cell.number_entering_cell_from_arc[incoming_cell] = 0
-    # Sort V by a FIFO priority function
-    V.sort(key=lambda x: x.cell_time_in)
-    for v in V:
-    # let (i,j) be turning movement of v
-    # let v.turning_move[0] = i , v.turning_move[1] = j
-        v.set_turning_move()
-        i_cell = cell_list[v.turning_move[0]]
-        j_cell = cell_list[v.turning_move[1]]
-        if can_move(v,i_cell,j_cell):
-            j_cell.number_entering_cell_from_arc[v.turning_move[0]] = j_cell.number_entering_cell_from_arc[v.turning_move[0]] +1
-            if v.is_autonomous:
-                for conflict_region in
+        # Sort V by a FIFO priority function
+        V.sort(key=lambda x: x.cell_time_in)
+        for v in V:
+        # let (i,j) be turning movement of v
+        # let v.turning_move[0] = i , v.turning_move[1] = j
+            v.set_turning_move()
+            i_cell = intersection.incoming_cells[v.turning_move[0]]
+            j_cell = cell_list[v.turning_move[1]]
+            if can_move(v,i_cell,j_cell):
+                j_cell.number_entering_cell_from_arc[v.turning_move[0]] = j_cell.number_entering_cell_from_arc[v.turning_move[0]] +1
+                if v.is_autonomous:
+                    for conflict_region in
 
 
 def can_move(v):

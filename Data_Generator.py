@@ -49,7 +49,16 @@ class Data():
         self.intersections_set = set()
         self.intersection_data_file = pandas.read_csv('Intersection.csv')
         self.intersection_data_dictionary = {}
-        self.intersection_dict = {}
+        # Dictionary that describes the cr corresponding to an incoming or outgoing arc
+        self.cr_for_arc_i = {}
+        # Subset of CRs for incoming link i to out going link j
+        self.cr_subset_from_i_to_j = {}
+        # Conflict Region Capacity
+        self.cr_capacity = {}
+        # Capacity of turning movement
+        self.turning_movement_capacity = {}
+        # Equivialent flow entering conflict region
+        self.cr_equivalent_flow = {}
 
 
         # experiment data parameters

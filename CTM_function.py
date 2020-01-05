@@ -1,3 +1,5 @@
+
+
 import Cell_Class
 """
 Created on Wed Dec 12 15:04:24 2018
@@ -41,7 +43,7 @@ def cell_transmission_model(vehicle_total_num_types, nim_t0, number_in_time_i, f
                                                                      * reaction_time[:] + vehicle_length)))
         for m in range(vehicle_total_num_types):
             #calculate vehicles from cell i-1 moving into cell i of class m
-            yim_t1[i,m] = min([nim_t0[i-1,m], (nim_t0[i-1,m] / number_in_time_i[i - 1]) * Qi_t[i],
+            yim_t0   [i,m] = min([nim_t0[i-1,m], (nim_t0[i-1,m] / number_in_time_i[i - 1]) * Qi_t[i],
                                (nim_t0[i-1,m] / number_in_time_i[i - 1]) * (wi_t[i] / free_flow_speed[i])
                                * (max_vehicles[i] - sum(nim_t0[i, :]))])
         #Calculate the vehicles from cell i-1 moving into cell i
@@ -49,7 +51,7 @@ def cell_transmission_model(vehicle_total_num_types, nim_t0, number_in_time_i, f
     for i in range(total_num_cells):
         for m in range(vehicle_total_num_types):
             #number of vehilces in cell i at next time t+1 of class m
-            nim_t1[i,m] = nim_t0[i,m] + yim_t1[i,m] - yim_t1[i + 1, current_time_period]
+            nim_t1[i,m] = nim_t0[i,m] + yim_t0[i,m] - yim_t0[i + 1, current_time_period]
         #number of vehicles in cell i at next time t+1
         ni_t1[i] = sum(nim_t1[i,:])
     return(yi_t1,nim_t1)
