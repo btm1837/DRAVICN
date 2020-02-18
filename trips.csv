@@ -1,2 +1,2 @@
 Supply_Node,Demand_Node,Uniform_Flow_perHour,Vehicle_Type
-A,E,600,1
+start,end,600,1

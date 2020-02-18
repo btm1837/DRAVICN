@@ -16,7 +16,7 @@ class Data():
         self.node_set = set()
 
         # arc data parameters
-        self.arc_data = pandas.read_csv('arcs.csv')
+        self.arc_data = pandas.read_csv(arc_file, sep=',')
         self.arc_capacity={}
         self.arc_cost={}
         self.arc_set=set()
@@ -27,7 +27,7 @@ class Data():
         self.cell_iteration_dict = {}
 
         # Trip data parameters
-        self.trip_data=pandas.read_csv('trips.csv')
+        self.trip_data=pandas.read_csv(trip_file)
         self.trip_set=set()
         self.trip_net_demand = {}
         self.trip_vehicle_type_origin_dest = {}
@@ -35,30 +35,33 @@ class Data():
         self.trip_total_current_trips=0
 
         # vehicle data parameters
-        self.vehicle_data = pandas.read_csv('vehicles.csv')
+        self.vehicle_data = pandas.read_csv(vehicle_file)
         self.initial_vehicle_routes = set()
         self.vehicle_dict = {}
-        self.vehicle_type_dictionary={}
-        self.set_vehicle_type_dictionary()
-        self.vehicle_total_num_types = len(self.vehicle_type_dictionary)
+        self.vehicle_type_dict={}
+        self.set_vehicle_type_dict()
+        self.vehicle_total_num_types = len(self.vehicle_type_dict)
 
         # Intersection Control Policy Parameters
-        self.incoming_cells = set()
-        self.outgoing_cells = set()
-        self.list_conflict_regions = {'cr1', 'cr2', 'cr3', 'cr4'}
-        self.intersections_set = set()
-        self.intersection_data_file = pandas.read_csv('Intersection.csv')
-        self.intersection_data_dictionary = {}
-        # Dictionary that describes the cr corresponding to an incoming or outgoing arc
-        self.cr_for_arc_i = {}
-        # Subset of CRs for incoming link i to out going link j
-        self.cr_subset_from_i_to_j = {}
-        # Conflict Region Capacity
-        self.cr_capacity = {}
-        # Capacity of turning movement
-        self.turning_movement_capacity = {}
-        # Equivialent flow entering conflict region
-        self.cr_equivalent_flow = {}
+        # self.incoming_cells = set()
+        # self.outgoing_cells = set()
+        # self.list_conflict_regions = {'cr1', 'cr2', 'cr3', 'cr4'}
+        # self.intersections_set = set()
+        # self.intersection_data_file = pandas.read_csv('Intersection.csv')
+
+        # intersection dictionary
+        self.intersection_dict = {}
+        # self.intersection_data_dictionary = {}
+        # # Dictionary that describes the cr corresponding to an incoming or outgoing arc
+        # self.cr_for_arc_i = {}
+        # # Subset of CRs for incoming link i to out going link j
+        # self.cr_subset_from_i_to_j = {}
+        # # Conflict Region Capacity
+        # self.cr_capacity = {}
+        # # Capacity of turning movement
+        # self.turning_movement_capacity = {}
+        # # Equivialent flow entering conflict region
+        # self.cr_equivalent_flow = {}
 
 
         # experiment data parameters
@@ -91,9 +94,9 @@ class Data():
         self.set_node_set_from_pandas()
         self.set_arc_attributes_from_pandas()
         self.set_trip_attributes_initial()
-        self.set_intersection_data_dictionary()
-        self.set_intersection_dict()
         self.create_cell_dict()
+        self.set_intersection_from_arcs()
+        self.set_global_cell_intersection_status()
         self.set_cell_iteration_dict()
         return
 
@@ -178,7 +181,7 @@ class Data():
         self.node_set = set(self.arc_data['Start'])
         return
 
-    def set_vehicle_type_dictionary(self):
+    def set_vehicle_type_dict(self):
         """
         Creates a dictionary for all vehicle type attributes based on manufacterer/type
         key = vehicle make number
@@ -186,7 +189,7 @@ class Data():
         :return:
         """
         for item in self.vehicle_data.iterrows():
-            self.vehicle_type_dictionary[item[1][0]]=item[1][1]
+            self.vehicle_type_dict[item[1][0]]=item[1][1]
         return
 
 
@@ -208,7 +211,7 @@ class Data():
                     #self.vehicle_routes[trip].add(arc)
                     route.add(arc)
             self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
-                                                             make=self.vehicle_type_dictionary[self.trip_vehicle_type_origin_dest[trip][0]],
+                                                             make=self.vehicle_type_dict[self.trip_vehicle_type_origin_dest[trip][0]],
                                                              origin=self.trip_vehicle_type_origin_dest[trip][1],
                                                              destination=self.trip_vehicle_type_origin_dest[trip][2],
                                                              routing_arcs=route)
@@ -232,17 +235,87 @@ class Data():
         return
 
 # Setting intersection data sets to correct values
-    def set_intersection_data_dictionary(self):
-        for item in self.intersection_data_file.iterrows():
-            self.intersection_data_dictionary[item[1][0]]=(item[1][1],item[1][2],item[1][3],item[1][4],\
-                                                           item[1][5],item[1][6],item[1][7],item[1][8])
+#     def set_intersection_data_dictionary(self):
+#         for item in self.intersection_data_file.iterrows():
+#             self.intersection_data_dictionary[item[1][0]]=(item[1][1],item[1][2],item[1][3],item[1][4],\
+#                                                            item[1][5],item[1][6],item[1][7],item[1][8])
+#         return
+#
+#     def set_intersection_dict(self):
+#         for a in self.intersection_data_dictionary.keys():
+#             self.intersection_dict[a] = Intersections_Class.Intersection(located_at_node=a,
+#                                                                          intersection_data=self.intersection_data_dictionary[a])
+#         return
+#########################################################
+    def set_intersection_from_arcs(self):
+        # find if a node needs to become an intersection
+        node_intersection_list = []
+        for node in self.node_set:
+            outgoing_cells=[]
+            incoming_cells=[]
+            for arc in self.arc_set:
+                if node==arc[0]:
+                    outgoing_cells.append(arc)
+                if node==arc[1]:
+                    incoming_cells.append(arc)
+            if len(outgoing_cells)>2:
+                node_intersection_list.append(node)
+                self.intersection_dict[node] = Intersections_Class.Intersection(located_at_node=node)
+                self.intersection_dict[node].set_incoming_cells(incoming_cells)
+                self.intersection_dict[node].set_outgoing_cells(outgoing_cells)
+                for arc in incoming_cells:
+                    if self.cell_dict[arc].direction == 'E':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc,'SW')
+                    elif self.cell_dict[arc].direction == 'W':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc,'NE')
+                    elif self.cell_dict[arc].direction == 'S':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc, 'NW')
+                    elif self.cell_dict[arc].direction == 'N':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc, 'SE')
+                for arc in outgoing_cells:
+                    if self.cell_dict[arc].direction == 'E':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc,'SE')
+                    elif self.cell_dict[arc].direction == 'W':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc,'NW')
+                    elif self.cell_dict[arc].direction == 'S':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc, 'SW')
+                    elif self.cell_dict[arc].direction == 'N':
+                        self.intersection_dict[node].set_cr_for_arc_i(arc, 'NE')
+                self.intersection_dict[node].set_intitial_cr_subset_from_i_to_j()
         return
 
-    def set_intersection_dict(self):
-        for a in self.intersection_data_dictionary.keys():
-            self.intersection_dict[a] = Intersections_Class.Intersection(located_at_node=a,
-                                                                         intersection_data=self.intersection_data_dictionary[a])
+    def set_global_cell_intersection_status(self):
+        for intersection_key in self.intersection_dict:
+            intersection = self.intersection_dict[intersection_key]
+            for cell_id in intersection.incoming_cells:
+                cell = self.cell_dict[cell_id]
+                cell.intersection_status = 'end_cell'
+            for cell_id in intersection.outgoing_cells:
+                cell = self.cell_dict[cell_id]
+                cell.intersection_status = 'pre_start'
+                start_node = cell.start_node
+                end_node = cell.end_node
+                if end_node=='start' or end_node =='end':
+                    continue
 
+                next_node = [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == end_node and next_node != start_node][0]
+                self.cell_dict[(end_node, next_node)].intersection_status = 'start_cell'
+        return
+
+
+    #     self.cell_dict[arc].intersection_status = 'pre_start'
+    #     end_node = self.cell_dict[arc].end_node
+    #     next_node = \
+    #     [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == end_node and next_node != node][0]
+    #     self.cell_dict[(end_node, next_node)].intersection_status = 'start_cell'
+    #
+    # if node == arc[1]:
+    #     incoming_cells.append(arc)
+    #     self.cell_dict[arc].intersection_status = 'end_cell'
+
+
+        #
+    #########################################################
 
     def create_cell_dict(self):
         for item in self.arc_data.iterrows():
@@ -253,12 +326,36 @@ class Data():
                                                       free_flow_speed=item[1][5],
                                                       max_vehicles=item[1][3],
                                                       cell_length=item[1][4],
-                                                      cell_travel_time=item[1][2])
+                                                      cell_travel_time=item[1][2],
+                                                      direction=item[1][6])
         return
 
+
+    # def set_cell_iteration_dict(self):
+    #     for item in self.cell_iteration_pandas_data.iterrows():
+    #         self.cell_iteration_dict[item[1][0]] = item[1][2].split(" ")
+    #
+    #     return
+
+    # Recursive methods for obtaining the cell iteration dict for the cell transmission model to operate on
     def set_cell_iteration_dict(self):
-        for item in self.cell_iteration_pandas_data.iterrows():
-            self.cell_iteration_dict[item[1][0]] = item[1][2].split(" ")
+        for cell_key in self.cell_dict:
+            cell = self.cell_dict[cell_key]
+            if cell.intersection_status=='start_cell':
+                cell_iteration_list = []
+                cell_iteration_list= self.set_iteration_list(cell,cell_iteration_list)
+                self.cell_iteration_dict[cell_key]=cell_iteration_list
+        return
+
+    def set_iteration_list(self,cell,cell_iteration_list):
+        cell_iteration_list.append(cell.cell_id)
+        if cell.intersection_status =='end_cell':
+            return cell_iteration_list
+        else:
+            node = [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == cell.end_node and next_node != cell.start_node][0]
+            return self.set_iteration_list(self.cell_dict[(cell.end_node,node)],cell_iteration_list)
+
+
 
 
     ####### GETTER BLOCK

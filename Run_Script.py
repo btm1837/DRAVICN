@@ -7,13 +7,15 @@ start_time = time.time()
 
 
 # Initializing the model
-arc_file = 'arcs.csv'
-node_file = 'nodes.csv'
-trip_file = 'trips.csv'
-vehicle_file = "vehicles.csv"
-cell_file = "cells.csv"
-experiment_file = "Experiments.csv"
-cell_iteration_dict_file = "cell_iteration_list.csv"
+# arc_file = 'arcs.csv'
+arc_file = r'arcs_set3.csv'
+node_file = r'nodes.csv'
+trip_file = r'trips.csv'
+vehicle_file = r"vehicles.csv"
+cell_file = r"cells.csv"
+experiment_file = r"Experiments.csv"
+cell_iteration_dict_file = r"cell_iteration_list.csv"
+
 
 data = Data_Generator.Data(arc_file=arc_file,
                            node_file=node_file,
@@ -21,8 +23,8 @@ data = Data_Generator.Data(arc_file=arc_file,
                            vehicle_file=vehicle_file,
                            cell_file=cell_file,
                            experiment_file=experiment_file,
-# from file?                          cell_iteration_list_file=cell_iteration_dict_file)
-                           experiment_file=experiment_file)
+                           cell_iteration_list_file= cell_iteration_dict_file)
+#                            experiment_file=experiment_file)
 
 optimization_model = Optimization.MinCostFlow(node_set=data.get_node_set(),
                                               trip_set=data.get_trip_set(),
@@ -35,7 +37,7 @@ optimization_model.solve()
 print('\n\n---------------------------')
 print('Cost: ', optimization_model.i.OBJ())
 optimization_model.get_Var()
-vehicle_dict = data.get_vehicle_dict(trip_opt_routes=optimization_model.optimal_routes)
+vehicle_dict = data.get_vehicle_dict(routing_from_opt=optimization_model.optimal_routes)
 
 #master branch file
 #cell_dict = data.get_cell_dict()
@@ -63,6 +65,6 @@ vehicle_dict = data.get_vehicle_dict(trip_opt_routes=optimization_model.optimal_
 #   vehicle_dict = data.get_vehicle_dict(routing_from_opt = optimization_model.optimal_routes)
 
 
-#end_time = time.time()
-#print("--- runtime = %s seconds ---" %(end_time - start_time))
+end_time = time.time()
+print("--- runtime = %s seconds ---" %(end_time - start_time))
 
