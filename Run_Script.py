@@ -17,13 +17,13 @@ experiment_file = r"Experiments.csv"
 cell_iteration_dict_file = r"cell_iteration_list.csv"
 
 
-data = Data_Generator.Data(arc_file=arc_file,
-                           node_file=node_file,
-                           trip_file=trip_file,
-                           vehicle_file=vehicle_file,
-                           cell_file=cell_file,
-                           experiment_file=experiment_file,
-                           cell_iteration_list_file= cell_iteration_dict_file)
+data = Data_Generator.simulation(arc_file=arc_file,
+                                 node_file=node_file,
+                                 trip_file=trip_file,
+                                 vehicle_file=vehicle_file,
+                                 cell_file=cell_file,
+                                 experiment_file=experiment_file,
+                                 cell_iteration_list_file= cell_iteration_dict_file)
 #                            experiment_file=experiment_file)
 
 optimization_model = Optimization.MinCostFlow(node_set=data.get_node_set(),
@@ -37,7 +37,10 @@ optimization_model.solve()
 print('\n\n---------------------------')
 print('Cost: ', optimization_model.i.OBJ())
 optimization_model.get_Var()
-vehicle_dict = data.get_vehicle_dict(routing_from_opt=optimization_model.optimal_routes)
+data.create_vehicle_dict(routing_from_opt=optimization_model.optimal_routes)
+
+
+
 
 #master branch file
 #cell_dict = data.get_cell_dict()

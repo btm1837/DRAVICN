@@ -126,4 +126,6 @@ class Cell:
 
     # def set_number_in_t_f_make_dict(self:
     #     nu
-
+    def get_receiving_flow(self):
+        #gets the maximum amount of vehicles that could enter the cell
+        return self.capacity - self.number_in_t_i

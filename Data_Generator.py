@@ -3,8 +3,10 @@ import numpy as np
 import Cell_Class
 import Vehicles_Class
 import Intersections_Class
+import ICP
+import CTM_function
 
-class Data():
+class simulation():
     """
     Takes Experimental set up intput values and creates attributes to be used by the models for initial values
 
@@ -154,6 +156,9 @@ class Data():
                 self.trip_net_demand[node,temp] = self.trip_net_demand[node,temp2]
 
         self.trip_total_current_trips = trip
+        return
+
+
 ######################################################################################
 
     def set_arc_attributes_from_pandas(self):
@@ -356,6 +361,24 @@ class Data():
             return self.set_iteration_list(self.cell_dict[(cell.end_node,node)],cell_iteration_list)
 
 
+    def put_vehicles_in_initial_cells(self):
+        #need to create vehicle dict prior to running this
+        # puts vehicle in the correct cell coresponding to its origin node and vehicle route
+
+        for vehicle in self.vehicle_dict.keys():
+            if vehicle.current_cell_location == "":
+                for cell in vehicle.route:
+                    if cell[0] == vehicle.origin:
+                        vehicle.current_cell_location = cell
+                        self.cell_dict[cell].cell_queue.appendleft(vehicle)
+        return
+
+    def transaction_manager_main_2_8(self):
+    # This is the main transaction manager proceedure
+
+
+
+        return
 
 
     ####### GETTER BLOCK

@@ -13,6 +13,8 @@ class Vehicle:
         self.route = routing_arcs
         self.initial_routing = set()
 
+        self.move_status = True
+
         # Route Traveled
         self.route_traveled = set()
 

@@ -59,6 +59,8 @@ Created on Wed Dec 12 15:04:24 2018
 def calc_backwards_wave_speed(cell, vehicle_type_dict, vehicle_length):
     backwards_wave_speed = 0
     # is cell density defined by number in divided by max number or number in divided by length of cell?
+    #Backwards wave speed is used in the calulation of moving vehicles
+    # BWS is dependant on vehicle length and the number in as well as the
     backwards_wave_speed_sum=0
     for vehicle_type in vehicle_type_dict.keys():
         backwards_wave_speed_sum = backwards_wave_speed_sum + (
@@ -118,9 +120,14 @@ def ctm_function_t_i(cell_dict, cell_iteration_dict, vehicle_type_dict, exper_ve
             cell.number_entering_cell_from_arc[prior_cell] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
 
             # this is where the multi type would need to be reimplemented but for my purposes I do not need to
+
+            #should move to transaction manage portion
             temp = []
-            for i in range(cell.number_entering_cell_from_arc):
-                temp.append(prior_cell.cell_queue.pop())
+            for i in range(cell.number_entering_cell_from_arc[prior_cell]):
+                vehicle = prior_cell.cell_queue.pop()
+                if vehicle.move_status == True:
+                    temp.append()
+                    vehicle.move_status = False
             cell.cell_queue.appendleft(temp)
     return
 
