@@ -125,9 +125,12 @@ def ctm_function_t_i(cell_dict, cell_iteration_dict, vehicle_type_dict, exper_ve
             temp = []
             for i in range(cell.number_entering_cell_from_arc[prior_cell]):
                 vehicle = prior_cell.cell_queue.pop()
-                if vehicle.move_status == True:
-                    temp.append()
-                    vehicle.move_status = False
+                # if vehicle.move_status == True:
+                #removed logic for now each iteration is just running ICP then CTM
+                temp.append()
+                vehicle.set_current_cell_location(cell.cell_id)
+                vehicle.route_traveled.add(cell.cell_id)
+                    # vehicle.move_status = False
             cell.cell_queue.appendleft(temp)
     return
 

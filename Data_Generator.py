@@ -5,6 +5,7 @@ import Vehicles_Class
 import Intersections_Class
 import ICP
 import CTM_function
+import random
 
 class simulation():
     """
@@ -35,6 +36,10 @@ class simulation():
         self.trip_vehicle_type_origin_dest = {}
         self.trip_total_initial_trips= 0
         self.trip_total_current_trips=0
+        #new trip parameters
+        self.source_dict = {}
+        self.sink_dict = {}
+
 
         # vehicle data parameters
         self.vehicle_data = pandas.read_csv(vehicle_file)
@@ -88,7 +93,8 @@ class simulation():
             self.exper_demand_multiplier = self.exper_data.iloc[experiment_number][3]
             self.exper_cell_travel_time_calc = self.exper_data.iloc[experiment_number][4]
             self.exper_simulation_time_interval = self.exper_data.iloc[experiment_number][5]
-            self.exper_vehicle_length = self.exper_data.iloc[experiment_number][6]
+            self.exper_total_sim_time = self.exper_data.iloc[experiment_number][6]
+            self.exper_vehicle_length = self.exper_data.iloc[experiment_number][7]
         self.create_data_for_experiment()
         return
 
@@ -103,36 +109,118 @@ class simulation():
         return
 
     def set_trip_attributes_initial(self):
+        self.set_source_sink_dict()
+        self.trip_check()
+        self.create_trips(0)
+        return
+
+    def set_source_sink_dict(self):
         """
         Uses the pandas object created by pandas.read_csv('trips_opt_table.csv') to populate:
         self.trip_net_demand
         self.trip_set
         :return:
         """
-        #Need to iterate over vehicles in trip set or make vehicle ids here
-        # vehicle ID needs to be the same as trip ID
         for item in self.trip_data.iterrows():
-            #calculate the number of vehicles assigned to a given trip
-            number_of_vehicles = (((item[1][2])/(3600.0) ) * self.exper_simulation_time_interval)* self.exper_demand_multiplier
-            for trip in range(int(number_of_vehicles)):
-                # Creating the Trip optimization matrix
-                temp = 'T' + str(trip)
-                self.trip_set.add(temp)
-                self.trip_vehicle_type_origin_dest[temp] = (item[1][3], item[1][0],item[1][1])
+            #temp variables for easy debugging
+            Node = item[1][0]
+            Type = item[1][1]
+            Uniform_Flow_perHour = item[1][2]
+            #using dictionaries for removeing vehicles and adding them
+            # dictionary value is trips/sim time unit
+            if Type=='source':
+                self.source_dict[Node] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
+            #sink has touple format to know how many trips have been allocated during a sim unit
+            elif Type=='sink':
+                self.sink_dict[Node] = [round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval)),0]
+            else:
+                print('###########################')
+                print('fatal error in trips data')
+                print(Node)
+                print(Type)
 
+        return
+    # check source and sink to make sure net flow is zero
+    def trip_check(self):
+        source_sum = sum(self.source_dict.values())
+        sink_sum = sum([item[0] for item in self.sink_dict.values()])
+
+        if source_sum!=sink_sum:
+            print('###########################')
+            print('fatal error source sink are not network net 0')
+            print ('source total')
+            print(source_sum)
+            print('sink total')
+            print(sink_sum)
+        return
+
+    # need to initialize trips set
+    def create_trips(self,simulation_time):
+        self.set_sink_capcity_to_zero()
+        for source_node in self.source_dict:
+            for i in range(0,int(self.source_dict[source_node])):
+                sink_list = [node1 for node1 in self.sink_dict if self.sink_dict[node1][1] < self.sink_dict[node1][0]]
+                sel_sink = random.choice(sink_list)
+                trip_name = str(source_node) +'_to_' +str(sel_sink) +'_@t_' +str(simulation_time)+'_#'+str(i)
+                self.trip_set.add(trip_name)
+                #auto set all vehicle types to 1
+                self.trip_vehicle_type_origin_dest[trip_name] = (1,source_node,sel_sink)
+                self.sink_dict[sel_sink][1] = self.sink_dict[sel_sink][1] + 1
+
+                #same net demand logic
                 for node in self.node_set:
-                    if item[1][0] == node:
+                    if source_node == node:
                         # A demand node on the trip
-                        self.trip_net_demand[item[1][0], temp] = -1
-                    elif item[1][1] == node:
+                        self.trip_net_demand[source_node, trip_name] = -1
+                    elif sel_sink == node:
                         # A supply node on the trip
-                        self.trip_net_demand[item[1][1], temp] = 1
+                        self.trip_net_demand[sel_sink, trip_name] = 1
                     else:
                         # all other nodes on the trip matrix
-                        self.trip_net_demand[node,temp]=0
-            self.trip_total_initial_trips = trip
-            self.trip_total_current_trips = self.trip_total_initial_trips + 1
+                        self.trip_net_demand[node,trip_name]=0
         return
+
+    def set_sink_capcity_to_zero(self):
+        for node in self.sink_dict:
+            self.sink_dict[node][1] = 0
+        return
+
+    def set_moving_trip_net_demand_in_sim(self):
+        for vehicle in self.vehicle_dict:
+            last_node = vehicle.current_cell_location[0]
+            current_node = vehicle.current_cell_location[1]
+            self.trip_net_demand[last_node] = 0
+            self.trip_net_demand[current_node] = -1
+        return
+
+    # def add_vehicles_to_sim(self):
+
+
+
+        ## old version of method retained for notes
+        # #Need to iterate over vehicles in trip set or make vehicle ids here
+        # # vehicle ID needs to be the same as trip ID
+        # for item in self.trip_data.iterrows():
+        #     #calculate the number of vehicles assigned to a given trip initially
+        #     number_of_vehicles = (((item[1][2])/(self.exper_total_sim_time) ) * self.exper_simulation_time_interval)* self.exper_demand_multiplier
+        #     for trip in range(int(number_of_vehicles)):
+        #         # Creating the Trip optimization matrix
+        #         temp = 'T' + str(trip)
+        #         self.trip_set.add(temp)
+        #         self.trip_vehicle_type_origin_dest[temp] = (item[1][3], item[1][0],item[1][1])
+        #
+        #         for node in self.node_set:
+        #             if item[1][0] == node:
+        #                 # A demand node on the trip
+        #                 self.trip_net_demand[item[1][0], temp] = -1
+        #             elif item[1][1] == node:
+        #                 # A supply node on the trip
+        #                 self.trip_net_demand[item[1][1], temp] = 1
+        #             else:
+        #                 # all other nodes on the trip matrix
+        #                 self.trip_net_demand[node,temp]=0
+        #     self.trip_total_initial_trips = trip
+        #     self.trip_total_current_trips = self.trip_total_initial_trips + 1
 
 ######################################################################
     def set_new_trip_attributes(self):
@@ -155,7 +243,7 @@ class simulation():
             for node in self.node_set:
                 self.trip_net_demand[node,temp] = self.trip_net_demand[node,temp2]
 
-        self.trip_total_current_trips = trip
+        self.trip_total_current_trips = self.trip_total_current_trips + self.trip_total_initial_trips
         return
 
 
@@ -208,19 +296,35 @@ class simulation():
         #self.vehicle_routes = {}
         for trip in self.trip_set:
             #add vehicles to vehicle list
-            route = set()
+            route = []
             #self.vehicle_routes[trip]=set()
             for arc in self.arc_set:
                 #define arcs on the trip's optimal path
                 if (arc[0],arc[1],trip) in routing_from_opt:
                     #self.vehicle_routes[trip].add(arc)
-                    route.add(arc)
+                    route.append(arc)
             self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
                                                              make=self.vehicle_type_dict[self.trip_vehicle_type_origin_dest[trip][0]],
                                                              origin=self.trip_vehicle_type_origin_dest[trip][1],
                                                              destination=self.trip_vehicle_type_origin_dest[trip][2],
                                                              routing_arcs=route)
         return
+
+    def tm_vehicle_dict_route_update(self,routing_from_opt):
+        # transaction manager proceedure to set the vehicles routing to be the one determined by the otpimization
+        for trip in self.vehicle_dict:
+            route = []
+            for arc in self.arc_set:
+                # define arcs on the trip's optimal path
+                if (arc[0], arc[1], trip) in routing_from_opt:
+                    # self.vehicle_routes[trip].add(arc)
+                    route.append(arc)
+
+
+
+
+        return
+
 
     def intitial_routing_new_trips(self,new_trip_set,routing_from_opt):
         """
@@ -363,7 +467,7 @@ class simulation():
 
     def put_vehicles_in_initial_cells(self):
         #need to create vehicle dict prior to running this
-        # puts vehicle in the correct cell coresponding to its origin node and vehicle route
+        # puts vehicle in the correct cell corresponding to its origin node and vehicle route
 
         for vehicle in self.vehicle_dict.keys():
             if vehicle.current_cell_location == "":

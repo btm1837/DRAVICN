@@ -29,16 +29,16 @@ def ICP(intersection_list, cell_dict):
                 # Remove a vehicle from the cell and add it to the list V
                 if len(incoming_cell.cell_queue) != 0:
                     vehicle = incoming_cell.cell_queue.pop()
-                    if vehicle.move_status:
-                        V.append(vehicle)
+                    # if vehicle.move_status:
+                    V.append(vehicle)
             # For all outgoing cells in the the intersection
             for outgoing_cell in intersection.outgoing_cells:
                 # set the y or number entering the outgoing cell from the incoming cell to 0
                 outgoing_cell.number_entering_cell_from_arc[incoming_cell] = 0
             for i in range(len(incoming_cell.cell_queue)):
                 vehicle = incoming_cell.cell_queue.pop()
-                if vehicle.move_status:
-                    sending_flow.append(vehicle)
+                # if vehicle.move_status:
+                sending_flow.append(vehicle)
         # Sort V by a FIFO priority function
         V.sort(key=lambda x: x.cell_time_in)
         # sort sending flow by same priority
@@ -55,8 +55,13 @@ def ICP(intersection_list, cell_dict):
             j_cell = cell_dict[v.turning_move[1]]
             if can_move(v,i_cell,j_cell):
                 j_cell.number_entering_cell_from_arc[v.turning_move[0]] = j_cell.number_entering_cell_from_arc[v.turning_move[0]] +1
-                v.move_status = False
+                # v.move_status = False
+                #removing check on vehicle movement logic
+                #added cell location logic for whenver a vehicle does move
+                v.set_current_cell_location(j_cell.cell_id)
+                v.route_traveled.add(j_cell.cell_id)
                 j_cell.cell_queue.appendleft(v)
+
                 if v.is_autonomous:
                     for conflict_region in intersection.cr_subset_from_i_to_j[i_cell.cell_id,j_cell.cell_id]:
                         intersection.cr_equivalent_flow[conflict_region] = intersection.cr_equivalent_flow[conflict_region]+ \
