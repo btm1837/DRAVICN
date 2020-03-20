@@ -1,6 +1,6 @@
 import pandas
 import collections
-
+import numpy as np
 
 class Cell:
     """
@@ -70,10 +70,9 @@ class Cell:
         # for transaction manager
         self.cell_travel_time = cell_travel_time
 
-        # desnity of type M
-        self.cell_density_for_make = {}
-        # total density of cells
-        self.total_cell_density = 0
+        # list of travel times through cell
+        self.cell_travel_time_list = []
+
 
     # Getters Block
     def get__(self):
@@ -128,4 +127,14 @@ class Cell:
     #     nu
     def get_receiving_flow(self):
         #gets the maximum amount of vehicles that could enter the cell
-        return self.capacity - self.number_in_t_i
+        return self.max_vehicles - self.number_in_t_i
+
+    def make_source_cell(self):
+        #1 billion capacity to receive vehicles
+        self.max_vehicles = 1000000000000
+        return
+
+    def get_and_set_cell_travel_time(self):
+        self.cell_travel_time = round(np.average(self.cell_travel_time_list), 2)
+        self.cell_travel_time_list = []
+        return self.cell_travel_time

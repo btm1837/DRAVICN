@@ -13,16 +13,16 @@ def Intersection_Control_Policy():
     outgoing_links_set = {}
     conflict_regions = {}
 
-def ICP(intersection_list, cell_dict):
+def ICP(data,simulation_time):
     # Defining data paramters to use
     # Makes it easier to move function outside of class if needed
 
     V = []
     sending_flow = []
     #For every intersection
-    for intersection in intersection_list:
+    for i in data.intersection_dict:
         # For every incoming cell in the intersection
-
+        intersection = data.intersection_dict[i]
         for incoming_cell in intersection.incoming_cells:
             # For every lane in the incoming cell
             for i in range(len(incoming_cell.num_lanes)):
@@ -50,14 +50,20 @@ def ICP(intersection_list, cell_dict):
             v.set_turning_move()
             # get the cell it is leaving from
             # i_cell_id = intersection.incoming_cells[v.turning_move[0]]
-            i_cell = cell_dict[v.turning_move[0]]
+            i_cell = data.cell_dict[v.turning_move[0]]
             # get the cell the car is going to
-            j_cell = cell_dict[v.turning_move[1]]
+            j_cell = data.cell_dict[v.turning_move[1]]
             if can_move(v,i_cell,j_cell):
                 j_cell.number_entering_cell_from_arc[v.turning_move[0]] = j_cell.number_entering_cell_from_arc[v.turning_move[0]] +1
                 # v.move_status = False
                 #removing check on vehicle movement logic
                 #added cell location logic for whenver a vehicle does move
+
+                v.cell_time_out = simulation_time
+                travel_time = v.cell_time_out - v.cell_time_in
+                i_cell.cell_travel_time_list.append(travel_time)
+                v.cell_time_in = simulation_time
+
                 v.set_current_cell_location(j_cell.cell_id)
                 v.route_traveled.add(j_cell.cell_id)
                 j_cell.cell_queue.appendleft(v)

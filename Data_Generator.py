@@ -178,6 +178,7 @@ class simulation():
                     else:
                         # all other nodes on the trip matrix
                         self.trip_net_demand[node,trip_name]=0
+        self.set_sink_capcity_to_zero()
         return
 
     def set_sink_capcity_to_zero(self):
@@ -193,61 +194,44 @@ class simulation():
             self.trip_net_demand[current_node] = -1
         return
 
+    # setting the cost of traversing an arc in sim
+    def set_moving_arc_cost(self):
+        # need to clear cell_travel_time list after this
+        for cell_key in self.cell_dict:
+            cell = self.cell_dict[cell_key]
+            travel_time = cell.get_and_set_cell_travel_time()
+            self.arc_cost[cell.cell_id] = travel_time
+        return
     # def add_vehicles_to_sim(self):
 
+    #creating the sink logic to remove vehcles from a cell
+    def sink_logic(self,df_vehicles,simulation_time):
+        # make a list of vehicles leaving
+        columns_v = ['vehicle_id', 'origin', 'destination', 'initial_route', 'route_traveled', 'time_taken', 'time_out',
+                     'time_in']
+        vehicle_leaving_list = []
+        for vehicle_key in self.vehicle_dict:
+            vehicle = self.vehicle_dict[vehicle_key]
+            if vehicle.destination == vehicle.current_cell_location[1]:
+                vehicle_leaving_list.append(vehicle_key)
 
+        #remove vehicles from the simlation and take some data down while I do it
+        for vehicle_key in vehicle_leaving_list:
+            vehicle = self.vehicle_dict[vehicle_key]
+            cell = self.cell_dict[vehicle.current_cell_location]
+            node = cell.cell_id[1]
+            if self.sink_dict[node][1] < self.sink_dict[node][0]:
+                removed_v = cell.cell_queue.pop()
+                removed_v.time_out_sim = simulation_time
+                time_taken = removed_v.time_out_sim - removed_v.time_in_sim
+                list = [removed_v.vehicle_id,removed_v.origin,removed_v.destination,removed_v.initial_routing,
+                        removed_v.route_traveled,time_taken,removed_v.time_out_sim,removed_v.time_in_sim]
+                temp = pandas.DataFrame([list],columns=columns_v)
+                df_vehicles= df_vehicles.append(temp)
+                del self.vehicle_dict[vehicle_key]
+                self.trip_set.remove(removed_v.vehicle_id)
+        return df_vehicles
 
-        ## old version of method retained for notes
-        # #Need to iterate over vehicles in trip set or make vehicle ids here
-        # # vehicle ID needs to be the same as trip ID
-        # for item in self.trip_data.iterrows():
-        #     #calculate the number of vehicles assigned to a given trip initially
-        #     number_of_vehicles = (((item[1][2])/(self.exper_total_sim_time) ) * self.exper_simulation_time_interval)* self.exper_demand_multiplier
-        #     for trip in range(int(number_of_vehicles)):
-        #         # Creating the Trip optimization matrix
-        #         temp = 'T' + str(trip)
-        #         self.trip_set.add(temp)
-        #         self.trip_vehicle_type_origin_dest[temp] = (item[1][3], item[1][0],item[1][1])
-        #
-        #         for node in self.node_set:
-        #             if item[1][0] == node:
-        #                 # A demand node on the trip
-        #                 self.trip_net_demand[item[1][0], temp] = -1
-        #             elif item[1][1] == node:
-        #                 # A supply node on the trip
-        #                 self.trip_net_demand[item[1][1], temp] = 1
-        #             else:
-        #                 # all other nodes on the trip matrix
-        #                 self.trip_net_demand[node,temp]=0
-        #     self.trip_total_initial_trips = trip
-        #     self.trip_total_current_trips = self.trip_total_initial_trips + 1
-
-######################################################################
-    def set_new_trip_attributes(self):
-        """
-        This function is to avoid iterating excessivley
-
-        it relies on the self.trip_net_demand unchanging
-
-        MIGHT NOT BE NEEDED
-        :return:
-        """
-        for trip in range(self.trip_total_current_trips, self.trip_total_current_trips + self.trip_total_initial_trips):
-            temp = 'T' + str(trip)
-            #add new trips to trip_set
-            self.trip_set.add(temp)
-            #number equivalent to this initial trip generated
-            trip_equivalent = trip - self.trip_total_current_trips + 1
-            temp2 = 'T' + str(trip_equivalent)
-            self.trip_vehicle_type_origin_dest[temp] = self.trip_vehicle_type_origin_dest[temp2]
-            for node in self.node_set:
-                self.trip_net_demand[node,temp] = self.trip_net_demand[node,temp2]
-
-        self.trip_total_current_trips = self.trip_total_current_trips + self.trip_total_initial_trips
-        return
-
-
-######################################################################################
 
     def set_arc_attributes_from_pandas(self):
         """
@@ -285,9 +269,16 @@ class simulation():
             self.vehicle_type_dict[item[1][0]]=item[1][1]
         return
 
+    def create_source_cells(self):
+        for node in self.source_dict:
+            for cell_key in self.cell_dict:
+                if cell_key[0] == node:
+                    cell = self.cell_dict[cell_key]
+                    cell.make_source_cell()
+        return
 
 
-    def create_vehicle_dict(self,routing_from_opt):
+    def create_and_update_vehicle_dict(self,routing_from_opt,simulation_time):
         """
         Sets the intitial routing of vehicles from the optimization variable data
         :param routing_from_opt:
@@ -303,59 +294,25 @@ class simulation():
                 if (arc[0],arc[1],trip) in routing_from_opt:
                     #self.vehicle_routes[trip].add(arc)
                     route.append(arc)
-            self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
-                                                             make=self.vehicle_type_dict[self.trip_vehicle_type_origin_dest[trip][0]],
-                                                             origin=self.trip_vehicle_type_origin_dest[trip][1],
-                                                             destination=self.trip_vehicle_type_origin_dest[trip][2],
-                                                             routing_arcs=route)
-        return
-
-    def tm_vehicle_dict_route_update(self,routing_from_opt):
-        # transaction manager proceedure to set the vehicles routing to be the one determined by the otpimization
-        for trip in self.vehicle_dict:
-            route = []
-            for arc in self.arc_set:
-                # define arcs on the trip's optimal path
-                if (arc[0], arc[1], trip) in routing_from_opt:
-                    # self.vehicle_routes[trip].add(arc)
-                    route.append(arc)
-
-
-
-
+            if trip in self.vehicle_dict:
+                self.vehicle_dict[trip].route = route
+            else:
+                self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
+                                                                 make=self.vehicle_type_dict[self.trip_vehicle_type_origin_dest[trip][0]],
+                                                                 origin=self.trip_vehicle_type_origin_dest[trip][1],
+                                                                 destination=self.trip_vehicle_type_origin_dest[trip][2],
+                                                                 routing_arcs=route)
+                #put vehicle in initial cell
+                vehicle = self.vehicle_dict[trip]
+                for cell in vehicle.route:
+                    if cell[0] == vehicle.origin:
+                        vehicle.current_cell_location = cell
+                        vehicle.cell_time_in = simulation_time
+                        vehicle.time_in_sim = simulation_time
+                        self.cell_dict[cell].cell_queue.appendleft(vehicle)
         return
 
 
-    def intitial_routing_new_trips(self,new_trip_set,routing_from_opt):
-        """
-        For formating the routing of new trips that are added to the simulation
-
-        :param new_trip_set:
-        :param routing_from_opt:
-        :return:
-        """
-        for trip in new_trip_set:
-            # create set for iteration and adding
-            self.vehicle_routes[trip]=set()
-            for arc in self.arc_set:
-                # define arcs on the trip's optimal path
-                if (arc[0],arc[1],trip) in routing_from_opt:
-                    self.vehicle_routes[trip].add(arc)
-        return
-
-# Setting intersection data sets to correct values
-#     def set_intersection_data_dictionary(self):
-#         for item in self.intersection_data_file.iterrows():
-#             self.intersection_data_dictionary[item[1][0]]=(item[1][1],item[1][2],item[1][3],item[1][4],\
-#                                                            item[1][5],item[1][6],item[1][7],item[1][8])
-#         return
-#
-#     def set_intersection_dict(self):
-#         for a in self.intersection_data_dictionary.keys():
-#             self.intersection_dict[a] = Intersections_Class.Intersection(located_at_node=a,
-#                                                                          intersection_data=self.intersection_data_dictionary[a])
-#         return
-#########################################################
     def set_intersection_from_arcs(self):
         # find if a node needs to become an intersection
         node_intersection_list = []
@@ -412,20 +369,6 @@ class simulation():
         return
 
 
-    #     self.cell_dict[arc].intersection_status = 'pre_start'
-    #     end_node = self.cell_dict[arc].end_node
-    #     next_node = \
-    #     [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == end_node and next_node != node][0]
-    #     self.cell_dict[(end_node, next_node)].intersection_status = 'start_cell'
-    #
-    # if node == arc[1]:
-    #     incoming_cells.append(arc)
-    #     self.cell_dict[arc].intersection_status = 'end_cell'
-
-
-        #
-    #########################################################
-
     def create_cell_dict(self):
         for item in self.arc_data.iterrows():
             cell_id = (item[1][0],item[1][1])
@@ -438,13 +381,6 @@ class simulation():
                                                       cell_travel_time=item[1][2],
                                                       direction=item[1][6])
         return
-
-
-    # def set_cell_iteration_dict(self):
-    #     for item in self.cell_iteration_pandas_data.iterrows():
-    #         self.cell_iteration_dict[item[1][0]] = item[1][2].split(" ")
-    #
-    #     return
 
     # Recursive methods for obtaining the cell iteration dict for the cell transmission model to operate on
     def set_cell_iteration_dict(self):
@@ -464,25 +400,28 @@ class simulation():
             node = [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == cell.end_node and next_node != cell.start_node][0]
             return self.set_iteration_list(self.cell_dict[(cell.end_node,node)],cell_iteration_list)
 
+#vehicles are now put in initial cells when created
+    # def put_vehicles_in_initial_cells(self):
+    #     #need to create vehicle dict prior to running this
+    #     # puts vehicle in the correct cell corresponding to its origin node and vehicle route
+    #
+    #     for vehicle in self.vehicle_dict.keys():
+    #         if vehicle.current_cell_location == "":
+    #             for cell in vehicle.route:
+    #                 if cell[0] == vehicle.origin:
+    #                     vehicle.current_cell_location = cell
+    #                     self.cell_dict[cell].cell_queue.appendleft(vehicle)
+    #     return
 
-    def put_vehicles_in_initial_cells(self):
-        #need to create vehicle dict prior to running this
-        # puts vehicle in the correct cell corresponding to its origin node and vehicle route
-
-        for vehicle in self.vehicle_dict.keys():
-            if vehicle.current_cell_location == "":
-                for cell in vehicle.route:
-                    if cell[0] == vehicle.origin:
-                        vehicle.current_cell_location = cell
-                        self.cell_dict[cell].cell_queue.appendleft(vehicle)
-        return
-
-    def transaction_manager_main_2_8(self):
+    def tm_creating_trips_for_next_t(self,simulation_time):
     # This is the main transaction manager proceedure
-
-
+        # first create any new trips
+        self.create_trips(simulation_time=simulation_time)
+        #set the net demand for those trips
+        self.set_moving_trip_net_demand_in_sim()
 
         return
+
 
 
     ####### GETTER BLOCK

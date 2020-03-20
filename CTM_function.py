@@ -105,18 +105,18 @@ def calc_number_in_t_f_make_dict(cell,next_cell):
 
     return
 
-def ctm_function_t_i(cell_dict, cell_iteration_dict, vehicle_type_dict, exper_vehicle_length):
+def ctm_function_t_i(data,simulation_time):
     # function to use to evaluate CTM
-    for start_cell in cell_iteration_dict.keys():
-        for cell_key in cell_iteration_dict[start_cell]:
-            cell = cell_dict[cell_key]
-            prior_cell=cell_dict[cell.prior_cell]
-            next_cell = cell_dict[cell.next_cell]
-            backwards_wave_speed = calc_backwards_wave_speed(cell, vehicle_type_dict, exper_vehicle_length)
-            max_flow = calc_max_flow(cell, vehicle_type_dict, exper_vehicle_length)
+    for start_cell in data.cell_iteration_dict.keys():
+        for cell_key in data.cell_iteration_dict[start_cell]:
+            cell = data.cell_dict[cell_key]
+            prior_cell=data.cell_dict[cell.prior_cell]
+            next_cell = data.cell_dict[cell.next_cell]
+            backwards_wave_speed = calc_backwards_wave_speed(cell, data.vehicle_type_dict, data.exper_vehicle_length)
+            max_flow = calc_max_flow(cell, data.vehicle_type_dict, data.exper_vehicle_length)
 
             # This function sets cell.number_entering_cell_from_arc_make_dict
-            calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,backwards_wave_speed)
+            calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,max_flow,backwards_wave_speed)
             cell.number_entering_cell_from_arc[prior_cell] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
 
             # this is where the multi type would need to be reimplemented but for my purposes I do not need to
@@ -128,10 +128,15 @@ def ctm_function_t_i(cell_dict, cell_iteration_dict, vehicle_type_dict, exper_ve
                 # if vehicle.move_status == True:
                 #removed logic for now each iteration is just running ICP then CTM
                 temp.append()
+                vehicle.cell_time_out = simulation_time
+                travel_time = vehicle.cell_time_out - vehicle.cell_time_in
+                prior_cell.cell_travel_time_list.append(travel_time)
+                vehicle.cell_time_in = simulation_time
                 vehicle.set_current_cell_location(cell.cell_id)
                 vehicle.route_traveled.add(cell.cell_id)
                     # vehicle.move_status = False
             cell.cell_queue.appendleft(temp)
+
     return
 
 def ctm_function_t_f(cell_dict,cell_iteration_dict):
@@ -142,4 +147,17 @@ def ctm_function_t_f(cell_dict,cell_iteration_dict):
             next_cell = cell_dict[cell.next_cell]
             calc_number_in_t_f_make_dict(cell,next_cell)
             cell.get_number_in_t_f()
+    return
+
+
+def test1(this):
+    test2(this.vehicle_dict)
+    return
+
+def test2(that):
+    test3(that['start_to_end_@t_0_#0'])
+    return
+
+def test3(the_other_thing):
+    the_other_thing.cell_time_in = 'jibber jabber'
     return
