@@ -175,7 +175,7 @@ class Intersection:
 
     # make a one time calculation instead of a constant calculation look up
     def calc_turning_movement_capacity(self,i_cell,j_cell):
-        self.turning_movement_capacity[i_cell.cell_id,j_cell.cell_id] = min(i_cell.max_vehicles,j_cell.max_vehicles)
+        self.turning_movement_capacity[i_cell.cell_id,j_cell.cell_id] = min(i_cell.cell_capacity,j_cell.cell_capacity)
         return
 
     def calc_cr_capacity(self,cr):
@@ -187,3 +187,34 @@ class Intersection:
                 self.cr_capacity[cr] = max(self.cr_capacity[cr],self.turning_movement_capacity[turning_move])
         return
 
+    def get_cr_capacity(self,cr):
+        self.calc_cr_capacity(cr)
+        return self.cr_capacity[cr]
+
+    def get_turning_movement_capacity(self,i_cell,j_cell):
+        self.calc_turning_movement_capacity(i_cell,j_cell)
+        return self.turning_movement_capacity[i_cell,j_cell]
+
+    def calc_all_cr_capacities(self):
+        # max of turning movement capcities for any turning movements such that cr is on the subset of crs on that turn
+        crs = ['NE','NW','SE','SW']
+
+        for cr in crs:
+            i = 0
+            for turning_move in self.cr_subset_from_i_to_j:
+                #set initial
+                if i==0:
+                    self.cr_capacity[cr] = self.turning_movement_capacity[turning_move]
+                i=i+1
+                # get any turning move containing this cr
+                # the cr capacity is the max of all the turning move capacities
+                if cr in list(self.cr_subset_from_i_to_j[turning_move]):
+                    self.cr_capacity[cr] = max(self.cr_capacity[cr],self.turning_movement_capacity[turning_move])
+        return
+
+
+    def reset_cr_equivalent_flow(self):
+        cr_ls = ['NE', 'NW', 'SE', 'SW']
+        for cr in cr_ls:
+            self.cr_equivalent_flow[cr] = 0
+        return

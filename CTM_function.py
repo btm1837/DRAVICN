@@ -6,7 +6,7 @@ Created on Wed Dec 12 15:04:24 2018
 
 @author: benmarus88
 """
-
+import numpy as np
 #Cell Transmission Model
 
 ## Inputs
@@ -61,6 +61,9 @@ def calc_backwards_wave_speed(cell, vehicle_type_dict, vehicle_length):
     # is cell density defined by number in divided by max number or number in divided by length of cell?
     #Backwards wave speed is used in the calulation of moving vehicles
     # BWS is dependant on vehicle length and the number in as well as the
+    if cell.number_in_t_i == 0:
+        backwards_wave_speed = cell.free_flow_speed * 1000000000000
+        return backwards_wave_speed
     backwards_wave_speed_sum=0
     for vehicle_type in vehicle_type_dict.keys():
         backwards_wave_speed_sum = backwards_wave_speed_sum + (
@@ -69,6 +72,12 @@ def calc_backwards_wave_speed(cell, vehicle_type_dict, vehicle_length):
                                ) * vehicle_type_dict[vehicle_type]
     # node vehicle_make_dict[vehicle_type] = reaction time
     backwards_wave_speed = vehicle_length/backwards_wave_speed_sum
+    return backwards_wave_speed
+
+def flow_density_bws(cell,vehicle_length,vehicle_type_dict):
+    #take average reaction time
+    reaction_time = np.average(vehicle_type_dict.values())
+    backwards_wave_speed = vehicle_length/ reaction_time
     return backwards_wave_speed
 
 
@@ -83,6 +92,13 @@ def calc_max_flow(cell, vehicle_type_dict, vehicle_length):
         ) * vehicle_type_dict[vehicle_type]
     max_flow_calc = (1/((cell.free_flow_speed * max_flow_sum)+vehicle_length))
     max_flow = cell.free_flow_speed * max_flow_calc
+    return max_flow
+
+def flow_density_max_flow(cell, vehicle_type_dict, vehicle_length):
+    # relaxing density assumption going with uniform vehicle
+    reaction_time = np.average(vehicle_type_dict.values())
+    max_flow = (cell.free_flow_speed * reaction_time + vehicle_length)
+    max_flow = (1/max_flow) * cell.free_flow_speed
     return max_flow
 
 def calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,backwards_wave_speed):
@@ -100,7 +116,7 @@ def calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,b
 def calc_number_in_t_f_make_dict(cell,next_cell):
     for vehicle_type in cell.number_in_t_i_make_dict:
         cell.number_in_t_f_make_dict[vehicle_type]= cell.number_in_t_i_make_dict[vehicle_type] + \
-                                                    cell.number_entering_cell_from_arc_make_dict[vehicle_type] + \
+                                                    cell.number_entering_cell_from_arc_make_dict[vehicle_type] - \
                                                     next_cell.number_entering_cell_from_arc_make_dict[vehicle_type]
 
     return
@@ -111,19 +127,28 @@ def ctm_function_t_i(data,simulation_time):
         for cell_key in data.cell_iteration_dict[start_cell]:
             cell = data.cell_dict[cell_key]
             prior_cell=data.cell_dict[cell.prior_cell]
-            next_cell = data.cell_dict[cell.next_cell]
-            backwards_wave_speed = calc_backwards_wave_speed(cell, data.vehicle_type_dict, data.exper_vehicle_length)
-            max_flow = calc_max_flow(cell, data.vehicle_type_dict, data.exper_vehicle_length)
+            if prior_cell.number_in_t_i == 0:
+                cell.number_entering_cell_from_arc[prior_cell.cell_id] = 0
+            elif cell.number_in_t_i == 0:
+                # use flow-density relationships relaxing heterogenous flow assumptions
+                backwards_wave_speed= flow_density_bws(cell=cell,vehicle_length=data.exper_vehicle_length,vehicle_type_dict=data.vehicle_type_dict)
+                max_flow = flow_density_max_flow(cell=cell,vehicle_type_dict=data.vehicle_type_dict,vehicle_length=data.exper_vehicle_length)
+                # This function sets cell.number_entering_cell_from_arc_make_dict
+                calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,max_flow,backwards_wave_speed)
+                cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
+            else:
+                backwards_wave_speed = calc_backwards_wave_speed(cell, data.vehicle_type_dict, data.exper_vehicle_length)
+                max_flow = calc_max_flow(cell, data.vehicle_type_dict, data.exper_vehicle_length)
 
-            # This function sets cell.number_entering_cell_from_arc_make_dict
-            calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,max_flow,backwards_wave_speed)
-            cell.number_entering_cell_from_arc[prior_cell] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
+                # This function sets cell.number_entering_cell_from_arc_make_dict
+                calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,max_flow,backwards_wave_speed)
+                cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
 
             # this is where the multi type would need to be reimplemented but for my purposes I do not need to
 
             #should move to transaction manage portion
             temp = []
-            for i in range(cell.number_entering_cell_from_arc[prior_cell]):
+            for i in range(cell.number_entering_cell_from_arc[prior_cell.cell_id]):
                 vehicle = prior_cell.cell_queue.pop()
                 # if vehicle.move_status == True:
                 #removed logic for now each iteration is just running ICP then CTM
@@ -139,14 +164,25 @@ def ctm_function_t_i(data,simulation_time):
 
     return
 
-def ctm_function_t_f(cell_dict,cell_iteration_dict):
+
+def ctm_function_t_f(data):
             #number in cell at next time
-    for start_cell in cell_iteration_dict:
-        for cell_key in cell_iteration_dict[start_cell]:
-            cell = cell_dict[cell_key]
-            next_cell = cell_dict[cell.next_cell]
+            #setting number in cell
+
+    for start_cell in data.cell_iteration_dict:
+        for cell_key in data.cell_iteration_dict[start_cell]:
+            cell = data.cell_dict[cell_key]
+            next_cell = data.cell_dict[cell.next_cell]
             calc_number_in_t_f_make_dict(cell,next_cell)
+
+            #setting number_in_t_i_make_dict for next iteration
+            #### NOTE
+            # might want to check here against the actual value in the cell
+            for make in cell.number_in_t_f_make_dict:
+                value = cell.number_in_t_f_make_dict[make]
+                cell.number_in_t_i_make_dict[make] = value
             cell.get_number_in_t_f()
+            # cell.number_in_t_i = cell.number_in_t_f
     return
 
 

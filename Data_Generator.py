@@ -7,6 +7,9 @@ import ICP
 import CTM_function
 import random
 
+import networkx as nx
+import matplotlib.pyplot as plt
+
 class simulation():
     """
     Takes Experimental set up intput values and creates attributes to be used by the models for initial values
@@ -45,9 +48,12 @@ class simulation():
         self.vehicle_data = pandas.read_csv(vehicle_file)
         self.initial_vehicle_routes = set()
         self.vehicle_dict = {}
+        #vehicle types
         self.vehicle_type_dict={}
         self.set_vehicle_type_dict()
         self.vehicle_total_num_types = len(self.vehicle_type_dict)
+        #vehicle type probabilities
+        # self.vehicle_type_prob_dict = {}
 
         # Intersection Control Policy Parameters
         # self.incoming_cells = set()
@@ -70,6 +76,12 @@ class simulation():
         # # Equivialent flow entering conflict region
         # self.cr_equivalent_flow = {}
 
+        #Data recording structures
+        self.columns_v = ['vehicle_id', 'origin', 'destination', 'initial_route', 'route_traveled', 'time_taken', 'time_out',
+                     'time_in']
+        self.columns_opt = ['simulation_time', 'cost']
+        self.df_vehicles = pandas.DataFrame(columns=self.columns_v)
+        self.df_opt = pandas.DataFrame(columns=self.columns_opt)
 
         # experiment data parameters
         self.exper_data = pandas.read_csv('Experiments.csv')
@@ -84,6 +96,12 @@ class simulation():
         self.exper_vehicle_length = 0
         # Initialize to first experiment
         self.set_experiment_values(0)
+
+        #graph network
+        self.network_graph=0
+        self.pos = 0
+        self.arc_label ={}
+        self.number_in_cell = {}
 
     def set_experiment_values(self,experiment_number):
         if experiment_number in self.exper_experiment_list:
@@ -112,6 +130,24 @@ class simulation():
         self.set_source_sink_dict()
         self.trip_check()
         self.create_trips(0)
+        return
+
+    def set_network_graph(self):
+        # make graph object
+        for arc in self.arc_cost:
+            self.arc_label[arc] = 'tt'+str(self.arc_cost[arc]) +'_mv' +str(self.arc_capacity[arc])+'_nic'+str(self.number_in_cell[arc])
+
+        self.network_graph = nx.from_pandas_edgelist(self.arc_data, 'Start', 'End',edge_attr='Cost',create_using=nx.DiGraph)
+        # Make the graph position object
+        self.pos = nx.spring_layout(self.network_graph)
+
+
+        return
+
+
+    def create_network_graph(self):
+        nx.draw(self.network_graph, pos=self.pos,with_labels=True, node_size=1500, alpha=0.3, arrows=True)
+        nx.draw_networkx_edge_labels(self.network_graph,self.pos,edge_labels=self.arc_label)
         return
 
     def set_source_sink_dict(self):
@@ -156,6 +192,10 @@ class simulation():
 
     # need to initialize trips set
     def create_trips(self,simulation_time):
+        # for uncoordinated runs only tell the optimzation to use new trips
+        if self.exper_coordination == 0:
+            self.trip_set = set()
+
         self.set_sink_capcity_to_zero()
         for source_node in self.source_dict:
             for i in range(0,int(self.source_dict[source_node])):
@@ -164,7 +204,8 @@ class simulation():
                 trip_name = str(source_node) +'_to_' +str(sel_sink) +'_@t_' +str(simulation_time)+'_#'+str(i)
                 self.trip_set.add(trip_name)
                 #auto set all vehicle types to 1
-                self.trip_vehicle_type_origin_dest[trip_name] = (1,source_node,sel_sink)
+                # need to set vehicle types according to source sink profile
+                self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sel_sink)
                 self.sink_dict[sel_sink][1] = self.sink_dict[sel_sink][1] + 1
 
                 #same net demand logic
@@ -187,11 +228,12 @@ class simulation():
         return
 
     def set_moving_trip_net_demand_in_sim(self):
-        for vehicle in self.vehicle_dict:
+        for vehicle_id in self.vehicle_dict:
+            vehicle = self.vehicle_dict[vehicle_id]
             last_node = vehicle.current_cell_location[0]
             current_node = vehicle.current_cell_location[1]
-            self.trip_net_demand[last_node] = 0
-            self.trip_net_demand[current_node] = -1
+            self.trip_net_demand[last_node,vehicle_id] = 0
+            self.trip_net_demand[current_node,vehicle_id] = -1
         return
 
     # setting the cost of traversing an arc in sim
@@ -201,14 +243,17 @@ class simulation():
             cell = self.cell_dict[cell_key]
             travel_time = cell.get_and_set_cell_travel_time()
             self.arc_cost[cell.cell_id] = travel_time
+            self.arc_data.loc[(self.arc_data['Start'] == 'start') & (self.arc_data['End'] == 'B'), 'Cost'] = travel_time
         return
     # def add_vehicles_to_sim(self):
 
     #creating the sink logic to remove vehcles from a cell
-    def sink_logic(self,df_vehicles,simulation_time):
+    def sink_logic(self,simulation_time):
+        #clear the sink current capacities
+        self.set_sink_capcity_to_zero()
+
+        #make columns for output
         # make a list of vehicles leaving
-        columns_v = ['vehicle_id', 'origin', 'destination', 'initial_route', 'route_traveled', 'time_taken', 'time_out',
-                     'time_in']
         vehicle_leaving_list = []
         for vehicle_key in self.vehicle_dict:
             vehicle = self.vehicle_dict[vehicle_key]
@@ -222,15 +267,22 @@ class simulation():
             node = cell.cell_id[1]
             if self.sink_dict[node][1] < self.sink_dict[node][0]:
                 removed_v = cell.cell_queue.pop()
+                #get data for output
                 removed_v.time_out_sim = simulation_time
                 time_taken = removed_v.time_out_sim - removed_v.time_in_sim
                 list = [removed_v.vehicle_id,removed_v.origin,removed_v.destination,removed_v.initial_routing,
                         removed_v.route_traveled,time_taken,removed_v.time_out_sim,removed_v.time_in_sim]
-                temp = pandas.DataFrame([list],columns=columns_v)
-                df_vehicles= df_vehicles.append(temp)
+                temp = pandas.DataFrame([list],columns=self.columns_v)
+                self.df_vehicles= self.df_vehicles.append(temp)
                 del self.vehicle_dict[vehicle_key]
-                self.trip_set.remove(removed_v.vehicle_id)
-        return df_vehicles
+
+                # if the experiement is with coordination tell the optimiation not to include this trip
+                # otherwise in un-coordinated runs this trip is already removed from tripset
+                if self.exper_coordination == 1:
+                    self.trip_set.remove(removed_v.vehicle_id)
+
+                self.sink_dict[node][1] = self.sink_dict[node][1] +1
+        return
 
 
     def set_arc_attributes_from_pandas(self):
@@ -275,6 +327,7 @@ class simulation():
                 if cell_key[0] == node:
                     cell = self.cell_dict[cell_key]
                     cell.make_source_cell()
+                    self.arc_capacity[cell_key] = cell.max_vehicles
         return
 
 
@@ -298,19 +351,45 @@ class simulation():
                 self.vehicle_dict[trip].route = route
             else:
                 self.vehicle_dict[trip] = Vehicles_Class.Vehicle(vehicle_ID=trip,
-                                                                 make=self.vehicle_type_dict[self.trip_vehicle_type_origin_dest[trip][0]],
+                                                                 make=self.trip_vehicle_type_origin_dest[trip][0],
                                                                  origin=self.trip_vehicle_type_origin_dest[trip][1],
                                                                  destination=self.trip_vehicle_type_origin_dest[trip][2],
                                                                  routing_arcs=route)
                 #put vehicle in initial cell
                 vehicle = self.vehicle_dict[trip]
-                for cell in vehicle.route:
-                    if cell[0] == vehicle.origin:
-                        vehicle.current_cell_location = cell
+                for cell_id in vehicle.route:
+                    if cell_id[0] == vehicle.origin:
+                        vehicle.current_cell_location = cell_id
+                        vehicle.route_traveled.add(cell_id)
                         vehicle.cell_time_in = simulation_time
                         vehicle.time_in_sim = simulation_time
-                        self.cell_dict[cell].cell_queue.appendleft(vehicle)
+                        # update cell properties
+                        cell = self.cell_dict[cell_id]
+                        cell.number_in_t_i_make_dict[vehicle.make] = cell.number_in_t_i_make_dict[vehicle.make] + 1
+                        cell.cell_queue.appendleft(vehicle)
+
         return
+
+
+    def update_all_cells_number_in_cell(self):
+        for cell_key in self.cell_dict:
+            cell=self.cell_dict[cell_key]
+            cell.get_number_in_t_i_and_make_dict_from_cell_queue()
+            self.number_in_cell[cell_key] = cell.number_in_t_i
+        return
+
+    def update_ICP_cells_number_in_cell(self):
+        for intersection_key in self.intersection_dict:
+            intersection = self.intersection_dict[intersection_key]
+            for outgoing_cell_id in intersection.outgoing_cells:
+                outgoing_cell = self.cell_dict[outgoing_cell_id]
+                outgoing_cell.get_number_in_t_i_and_make_dict_from_cell_queue()
+            for incoming_cell_id in intersection.incoming_cells:
+                incoming_cell = self.cell_dict[incoming_cell_id]
+                incoming_cell.get_number_in_t_i_and_make_dict_from_cell_queue()
+        return
+
+
 
 
     def set_intersection_from_arcs(self):
@@ -366,6 +445,7 @@ class simulation():
 
                 next_node = [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == end_node and next_node != start_node][0]
                 self.cell_dict[(end_node, next_node)].intersection_status = 'start_cell'
+                self.cell_dict[(end_node, next_node)].prior_cell = cell.cell_id
         return
 
 
@@ -380,6 +460,10 @@ class simulation():
                                                       cell_length=item[1][4],
                                                       cell_travel_time=item[1][2],
                                                       direction=item[1][6])
+            for make in self.vehicle_type_dict:
+                self.cell_dict[cell_id].number_in_t_i_make_dict[make] = 0
+            self.cell_dict[cell_id].cell_queue.clear()
+
         return
 
     # Recursive methods for obtaining the cell iteration dict for the cell transmission model to operate on
@@ -394,11 +478,18 @@ class simulation():
 
     def set_iteration_list(self,cell,cell_iteration_list):
         cell_iteration_list.append(cell.cell_id)
+
+        #get prior cell
+        node2 = [prior_node for (prior_node,c_start_node) in self.arc_set if c_start_node == cell.start_node and prior_node != cell.end_node][0]
+        cell.prior_cell = (node2, cell.start_node)
+
         if cell.intersection_status =='end_cell':
             return cell_iteration_list
         else:
             node = [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == cell.end_node and next_node != cell.start_node][0]
+            cell.next_cell = (cell.end_node,node)
             return self.set_iteration_list(self.cell_dict[(cell.end_node,node)],cell_iteration_list)
+
 
 #vehicles are now put in initial cells when created
     # def put_vehicles_in_initial_cells(self):
@@ -413,13 +504,68 @@ class simulation():
     #                     self.cell_dict[cell].cell_queue.appendleft(vehicle)
     #     return
 
-    def tm_creating_trips_for_next_t(self,simulation_time):
+    def transaction_manager_post_vehicle_move(self,simulation_time):
     # This is the main transaction manager proceedure
         # first create any new trips
         self.create_trips(simulation_time=simulation_time)
         #set the net demand for those trips
         self.set_moving_trip_net_demand_in_sim()
 
+        #set the arc travel cost for those trips
+        self.set_moving_arc_cost()
+
+        #update outgoing_cells to be able to use CTM on next time around using cell queue
+        self.update_ICP_cells_number_in_cell()
+
+        # send some vehicles down the drain
+        self.sink_logic(simulation_time=simulation_time)
+        return
+
+    def transaction_manager_post_opt(self,simulation_time,routing_from_opt):
+
+        #updates vehicle routes, and creates and places new vehicles in cells
+        self.create_and_update_vehicle_dict(routing_from_opt=routing_from_opt,
+                                            simulation_time=simulation_time)
+        #updates the number in each cell for CTM
+        self.update_all_cells_number_in_cell()
+        return
+
+    def transaction_manager_post_CTM_before_ICP(self):
+        # need to update the number in all cells before ICP so that it knows the number in incoming and outgoing cells
+        # and so that the number is set for next iteration for all other cells
+        #using cell queue
+        self.update_all_cells_number_in_cell()
+
+        #update the cr capacity, turning move capacity, and cell capacities for the ICP
+        self.update_intersection_capacities()
+
+        return
+
+
+    def update_intersection_capacities(self):
+        # for all intersections
+        for interesection_id in self.intersection_dict:
+            intersection_obj = self.intersection_dict[interesection_id]
+            # for all incoming cells
+            for outgoing_cell_id in intersection_obj.outgoing_cells:
+                outgoing_cell_obj = self.cell_dict[outgoing_cell_id]
+                # get/set cell capacity
+                outgoing_cell_obj.get_cell_capacity()
+
+            for incoming_cell_id in intersection_obj.incoming_cells:
+                incoming_cell_obj = self.cell_dict[incoming_cell_id]
+                # set cell capacity / get one
+                incoming_cell_obj.get_cell_capacity()
+                #for all outgoing cells
+                for outgoing_cell_id in intersection_obj.outgoing_cells:
+                    outgoing_cell_obj = self.cell_dict[outgoing_cell_id]
+                    # get/set cell capacity
+                    intersection_obj.turning_movement_capacity[incoming_cell_id, outgoing_cell_id] = min(incoming_cell_obj.cell_capacity,
+                                                                                         outgoing_cell_obj.cell_capacity)
+
+            intersection_obj.calc_all_cr_capacities()
+            #set flows for this time period to zero
+            intersection_obj.reset_cr_equivalent_flow()
         return
 
 

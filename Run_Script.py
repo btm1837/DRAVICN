@@ -5,6 +5,10 @@ import Data_Generator
 import CTM_function
 import ICP
 import pandas as pd
+#graphing tools
+import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
 
 start_time = time.time()
 
@@ -19,7 +23,7 @@ def initialize_setup():
     cell_file = r"cells.csv"
     experiment_file = r"Experiments.csv"
     cell_iteration_dict_file = r"cell_iteration_list.csv"
-
+    simulation_time = 0
 
     data = Data_Generator.simulation(arc_file=arc_file,
                                      node_file=node_file,
@@ -42,7 +46,8 @@ def initialize_setup():
     print('Cost: ', optimization_model.i.OBJ())
     optimization_model.get_Var()
     data.create_source_cells()
-    data.create_and_update_vehicle_dict(routing_from_opt=optimization_model.optimal_routes)
+    data.transaction_manager_post_opt(routing_from_opt=optimization_model.optimal_routes,
+                                      simulation_time=simulation_time)
 
     return data
 
@@ -50,15 +55,21 @@ def initialize_setup():
 #     data.arc_file = 'jiberish'
 #     return
 
-def transaction_manager_sim_loop(simulation_time,data,df_vehicles,df_opt):
+def transaction_manager_sim_loop(simulation_time,data):
     # move some vehilces down roads
-    CTM_function.ctm_function_t_i(data)
+    CTM_function.ctm_function_t_i(data=data,
+                                  simulation_time=simulation_time)
+
+    # Set number of vehicles in cells for ICP and post CTM operations
+    data.transaction_manager_post_CTM_before_ICP()
 
     #move some vehilces in intersections
-    ICP.ICP(data)
+    ICP.ICP(data=data,
+            simulation_time=simulation_time)
 
-    # setting new trip attributes
-    data.tm_creating_trips_for_next_t(simulation_time=simulation_time)
+    # TM adjustments after CTM & ICP before Opt :
+    #   -
+    data.transaction_manager_post_vehicle_move(simulation_time=simulation_time)
     # getting new routing from opt
     optimization_model = Optimization.MinCostFlow(node_set=data.get_node_set(),
                                               trip_set=data.get_trip_set(),
@@ -70,32 +81,44 @@ def transaction_manager_sim_loop(simulation_time,data,df_vehicles,df_opt):
     optimization_model.solve()
     optimization_model.get_Var()
 
-    # update vehicle routes
-    data.create_and_update_vehicle_dict(routing_from_opt=optimization_model.optimal_routes)
-
-    #sink logic and recording vehicle data
-    data.sink_logic(df_vehicles=df_vehicles,
-                    simulation_time=simulation_time)
     #record some data
-    df_opt.append([simulation_time,optimization_model.i.OBJ()])
+    opt_list = [simulation_time,optimization_model.i.OBJ()]
+    temp = pd.DataFrame([opt_list],columns=data.columns_opt)
+    data.df_opt = data.df_opt.append(temp)
+
+    # TM adjustments after opt before CTM & ICP"
+    #   -
+    data.transaction_manager_post_opt(routing_from_opt=optimization_model.optimal_routes,
+                                      simulation_time=simulation_time)
+
     return
 
 def run_simulation():
     data = initialize_setup()
-    columns_v = ['vehicle_id','origin','destination','initial_route','route_traveled','time_taken','time_out','time_in']
-    columns_opt = ['simulation_time','cost']
-    df_vehicles = pd.DataFrame(columns=columns_v)
-    df_opt = pd.DataFrame(columns=columns_opt)
-    for simulation_time in range(0,data.exper_total_sim_time,data.exper_simulation_time_interval):
+
+    for simulation_time in range(int(30),int(data.exper_total_sim_time),int(data.exper_simulation_time_interval)):
         transaction_manager_sim_loop(simulation_time=simulation_time,
-                                     data= data,
-                                     df_vehicles=df_vehicles,
-                                     df_opt=df_opt)
-    return df_vehicles,df_opt
+                                     data= data)
+        print(simulation_time)
+
+    return data.df_vehicles,data.df_opt
 
 
-# data = initialize_setup()
-run_simulation()
+data = initialize_setup()
+# run_simulation()
+# df_vehicles,df_opt = run_simulation()
 end_time = time.time()
 print("--- runtime = %s seconds ---" %(end_time - start_time))
 
+
+#pass by ref verification
+def test1():
+    data =initialize_setup()
+    for i in range(10):
+        j = test2(data,i)
+    return j
+
+def test2(data,i):
+    data.exper_simulation_time_interval = str(data.exper_simulation_time_interval) + str(i)+'this'
+    j =  data.exper_simulation_time_interval
+    return j

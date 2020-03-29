@@ -17,25 +17,33 @@ def ICP(data,simulation_time):
     # Defining data paramters to use
     # Makes it easier to move function outside of class if needed
 
-    V = []
-    sending_flow = []
+
     #For every intersection
     for i in data.intersection_dict:
+        V = []
+        sending_flow = []
         # For every incoming cell in the intersection
         intersection = data.intersection_dict[i]
-        for incoming_cell in intersection.incoming_cells:
+        for incoming_cell_key in intersection.incoming_cells:
             # For every lane in the incoming cell
-            for i in range(len(incoming_cell.num_lanes)):
+            incoming_cell = data.cell_dict[incoming_cell_key]
+            for i in range(incoming_cell.num_lanes):
                 # Remove a vehicle from the cell and add it to the list V
+                if len(incoming_cell.cell_queue)!= 0:
+                    if list() in incoming_cell.cell_queue: incoming_cell.cell_queue.clear()
                 if len(incoming_cell.cell_queue) != 0:
                     vehicle = incoming_cell.cell_queue.pop()
-                    # if vehicle.move_status:
                     V.append(vehicle)
+                    # if vehicle.move_status:
+
             # For all outgoing cells in the the intersection
-            for outgoing_cell in intersection.outgoing_cells:
+            for outgoing_cell_key in intersection.outgoing_cells:
+                outgoing_cell = data.cell_dict[outgoing_cell_key]
                 # set the y or number entering the outgoing cell from the incoming cell to 0
-                outgoing_cell.number_entering_cell_from_arc[incoming_cell] = 0
+                outgoing_cell.number_entering_cell_from_arc[incoming_cell_key] = 0
             for i in range(len(incoming_cell.cell_queue)):
+                if len(incoming_cell.cell_queue)!= 0:
+                    if list() in incoming_cell.cell_queue: incoming_cell.cell_queue.clear()
                 vehicle = incoming_cell.cell_queue.pop()
                 # if vehicle.move_status:
                 sending_flow.append(vehicle)
@@ -53,17 +61,19 @@ def ICP(data,simulation_time):
             i_cell = data.cell_dict[v.turning_move[0]]
             # get the cell the car is going to
             j_cell = data.cell_dict[v.turning_move[1]]
-            if can_move(v,i_cell,j_cell):
+            if can_move(v,i_cell,j_cell,intersection,data.exper_vehicle_length):
                 j_cell.number_entering_cell_from_arc[v.turning_move[0]] = j_cell.number_entering_cell_from_arc[v.turning_move[0]] +1
                 # v.move_status = False
                 #removing check on vehicle movement logic
                 #added cell location logic for whenver a vehicle does move
-
+                #simulation travel time
                 v.cell_time_out = simulation_time
+
+                #cell travel time considerations
                 travel_time = v.cell_time_out - v.cell_time_in
                 i_cell.cell_travel_time_list.append(travel_time)
                 v.cell_time_in = simulation_time
-
+                #set current cell location and add to route travel the new cell
                 v.set_current_cell_location(j_cell.cell_id)
                 v.route_traveled.add(j_cell.cell_id)
                 j_cell.cell_queue.appendleft(v)
@@ -74,19 +84,22 @@ def ICP(data,simulation_time):
                         (intersection.cr_capacity[conflict_region]/intersection.turning_movement_capacity[v.turning_move])
                 else:
                     print('Need to add non-autonomous intersection logic')
-                    for outgoing_cell in intersection.outgoing_cells:
-                        for conflict_region in intersection.cr_subset_from_i_to_j[i_cell.cell_id,outgoing_cell]:
+                    for outgoing_cell_key in intersection.outgoing_cells:
+                        for conflict_region in intersection.cr_subset_from_i_to_j[i_cell.cell_id,outgoing_cell_key]:
                             intersection.cr_equivalent_flow[conflict_region] = intersection.cr_equivalent_flow[conflict_region] + \
                                                                                (intersection.cr_capacity[conflict_region] /
                                                                                 intersection.turning_movement_capacity[v.turning_move])
-                V.append(sending_flow.pop())
+                if len(sending_flow)>0:
+                    V.append(sending_flow.pop())
     return
 
 
 
 
 
-def can_move(v,i_cell,j_cell, intersection,hv_reaction_time,av_reaction_time,vehicle_length):
+def can_move(v,i_cell,j_cell, intersection,vehicle_length,hv_reaction_time=1.5,av_reaction_time=0.5):
+    #calculation for cr values and turning movement caluce
+
     #receiving flow calculation baked into class
     receiving_flow =  j_cell.get_receiving_flow()
     expression1_1 = j_cell.get_receiving_flow() - sum(j_cell.number_entering_cell_from_arc.values())
