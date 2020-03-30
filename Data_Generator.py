@@ -139,15 +139,23 @@ class simulation():
 
         self.network_graph = nx.from_pandas_edgelist(self.arc_data, 'Start', 'End',edge_attr='Cost',create_using=nx.DiGraph)
         # Make the graph position object
-        self.pos = nx.spring_layout(self.network_graph)
-
-
+        # self.pos = nx.spring_layout(self.network_graph)
+        self.pos = nx.kamada_kawai_layout(self.network_graph)
         return
 
 
-    def create_network_graph(self):
-        nx.draw(self.network_graph, pos=self.pos,with_labels=True, node_size=1500, alpha=0.3, arrows=True)
-        nx.draw_networkx_edge_labels(self.network_graph,self.pos,edge_labels=self.arc_label)
+    def create_network_graph(self,label_type='all'):
+        nx.draw(self.network_graph, pos=self.pos,with_labels=True, node_size=200, alpha=0.3, arrows=True)
+        if label_type=='all':
+            nx.draw_networkx_edge_labels(self.network_graph,self.pos,edge_labels=self.arc_label,label_pos=0.3,font_size=7)
+        elif label_type=='cost':
+            nx.draw_networkx_edge_labels(self.network_graph, self.pos, edge_labels=self.arc_cost,label_pos=0.3,font_size=7)
+        elif label_type=='number_in_cell':
+            nx.draw_networkx_edge_labels(self.network_graph, self.pos, edge_labels=self.number_in_cell,label_pos=0.3,font_size=7)
+        elif label_type=='capacity':
+            nx.draw_networkx_edge_labels(self.network_graph, self.pos, edge_labels=self.arc_capacity,label_pos=0.3,font_size=7)
+        else:
+            nx.draw_networkx_edge_labels(self.network_graph, self.pos, edge_labels=self.arc_label,label_pos=0.3,font_size=7)
         return
 
     def set_source_sink_dict(self):
@@ -230,10 +238,13 @@ class simulation():
     def set_moving_trip_net_demand_in_sim(self):
         for vehicle_id in self.vehicle_dict:
             vehicle = self.vehicle_dict[vehicle_id]
-            last_node = vehicle.current_cell_location[0]
-            current_node = vehicle.current_cell_location[1]
+            last_node = vehicle.last_node_location
+            current_node = vehicle.current_node_location
             self.trip_net_demand[last_node,vehicle_id] = 0
             self.trip_net_demand[current_node,vehicle_id] = -1
+            # if vehicle not in self.cell_dict[current_node].cell_queue:
+            #     cell = self.cell_dict[current_node]
+            #     cell.
         return
 
     # setting the cost of traversing an arc in sim
@@ -360,6 +371,7 @@ class simulation():
                 for cell_id in vehicle.route:
                     if cell_id[0] == vehicle.origin:
                         vehicle.current_cell_location = cell_id
+                        vehicle.set_current_cell_location(cell_id)
                         vehicle.route_traveled.add(cell_id)
                         vehicle.cell_time_in = simulation_time
                         vehicle.time_in_sim = simulation_time

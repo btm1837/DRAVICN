@@ -45,6 +45,12 @@ def initialize_setup():
     print('\n\n---------------------------')
     print('Cost: ', optimization_model.i.OBJ())
     optimization_model.get_Var()
+
+    #record some data
+    opt_list = [simulation_time,optimization_model.i.OBJ()]
+    temp = pd.DataFrame([opt_list],columns=data.columns_opt)
+    data.df_opt = data.df_opt.append(temp)
+
     data.create_source_cells()
     data.transaction_manager_post_opt(routing_from_opt=optimization_model.optimal_routes,
                                       simulation_time=simulation_time)
@@ -79,6 +85,8 @@ def transaction_manager_sim_loop(simulation_time,data):
                                               arc_set=data.get_arc_set())
     # solve model
     optimization_model.solve()
+    print('\n\n---------------------------')
+    print('Cost: ', optimization_model.i.OBJ())
     optimization_model.get_Var()
 
     #record some data
@@ -104,9 +112,9 @@ def run_simulation():
     return data.df_vehicles,data.df_opt
 
 
-data = initialize_setup()
+# data = initialize_setup()
 # run_simulation()
-# df_vehicles,df_opt = run_simulation()
+df_vehicles,df_opt = run_simulation()
 end_time = time.time()
 print("--- runtime = %s seconds ---" %(end_time - start_time))
 

@@ -76,7 +76,7 @@ def calc_backwards_wave_speed(cell, vehicle_type_dict, vehicle_length):
 
 def flow_density_bws(cell,vehicle_length,vehicle_type_dict):
     #take average reaction time
-    reaction_time = np.average(vehicle_type_dict.values())
+    reaction_time = np.average(list(vehicle_type_dict.values()))
     backwards_wave_speed = vehicle_length/ reaction_time
     return backwards_wave_speed
 
@@ -92,14 +92,14 @@ def calc_max_flow(cell, vehicle_type_dict, vehicle_length):
         ) * vehicle_type_dict[vehicle_type]
     max_flow_calc = (1/((cell.free_flow_speed * max_flow_sum)+vehicle_length))
     max_flow = cell.free_flow_speed * max_flow_calc
-    return max_flow
+    return round(max_flow,0)
 
 def flow_density_max_flow(cell, vehicle_type_dict, vehicle_length):
     # relaxing density assumption going with uniform vehicle
-    reaction_time = np.average(vehicle_type_dict.values())
+    reaction_time = np.average(list(vehicle_type_dict.values()))
     max_flow = (cell.free_flow_speed * reaction_time + vehicle_length)
     max_flow = (1/max_flow) * cell.free_flow_speed
-    return max_flow
+    return round(max_flow,0)
 
 def calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,backwards_wave_speed):
     for vehicle_type in vehicle_type_dict.keys():
@@ -110,7 +110,7 @@ def calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,b
                  prior_cell.number_in_t_i) * (backwards_wave_speed/prior_cell.free_flow_speed)
         item3_2 = cell.max_vehicles - cell.number_in_t_i
         item3 = item3_1 * item3_2
-        cell.number_entering_cell_from_arc_make_dict[vehicle_type] = min(item1,item2,item3)
+        cell.number_entering_cell_from_arc_make_dict[vehicle_type] = round(min(item1,item2,item3),0)
     return
 
 def calc_number_in_t_f_make_dict(cell,next_cell):

@@ -26,6 +26,7 @@ class Vehicle:
 
         # Cell Location
         self.current_cell_location =''
+        self.last_cell_location=''
         self.next_cell_location = ''
         self.turning_move = ''
 
@@ -48,22 +49,36 @@ class Vehicle:
 
     def set_time_in_sim(self,time):
         self.time_in_sim = time
+        return
 
     def set_time_out_sim(self,time):
         self.time_out_sim = time
+        return
 
     def set_current_node_location(self,node):
         #self.route_traveled.add((self.current_node_location,node))
         self.last_node_location = self.current_node_location
         self.current_node_location = node
+        return
 
     def set_current_cell_location(self,cell):
+        # if vehicle is starting at origin then it is modeled at the begingin of a cell
+        # otherwise the vehicle is put at the node at the end of its cell
+        if self.current_cell_location[0] == self.origin:
+            self.last_node_location = self.origin
+        else:
+            self.last_node_location = self.current_cell_location[1]
+
+        self.last_cell_location = self.current_cell_location
         self.current_cell_location = cell
+        self.current_node_location = self.current_cell_location[1]
+        return
 
     def set_next_cell_location(self):
         for item in self.route:
             if self.current_cell_location[1] == item[0]:
                 self.next_cell_location = item
+        return
 
     def set_turning_move(self):
         """

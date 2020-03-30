@@ -91,6 +91,12 @@ def ICP(data,simulation_time):
                                                                                 intersection.turning_movement_capacity[v.turning_move])
                 if len(sending_flow)>0:
                     V.append(sending_flow.pop())
+            else:
+                i_cell.cell_queue.append(v)
+                j_travel_time_delay = j_cell.cell_travel_time
+                j_travel_time_delay = j_travel_time_delay + data.exper_simulation_time_interval
+                j_cell.cell_travel_time_list.append(travel_time)
+
     return
 
 

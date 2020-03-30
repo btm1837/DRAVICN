@@ -129,6 +129,7 @@ class MinCostFlow:
         self.m.construct()
         #self.original = self.m
         self.i = self.m
+
         solver = pyomo.opt.SolverFactory('gurobi')
         results = solver.solve(self.i, tee=False, keepfiles=False)
 
