@@ -117,7 +117,7 @@ class Cell:
         self.number_entering_cell_from_arc[cell_id] = 0
         for vehicle_type in self.number_in_t_i_make_dict:
             self.number_entering_cell_from_arc[cell_id] = self.number_entering_cell_from_arc[cell_id] + self.number_in_t_i_make_dict[vehicle_type]
-        return
+        return self.number_entering_cell_from_arc[cell_id]
 
     def get_number_in_t_f(self):
         self.number_in_t_f = 0

@@ -148,7 +148,7 @@ def ctm_function_t_i(data,simulation_time):
 
             #should move to transaction manage portion
             temp = []
-            for i in range(cell.number_entering_cell_from_arc[prior_cell.cell_id]):
+            for i in range(int(cell.number_entering_cell_from_arc[prior_cell.cell_id])):
                 vehicle = prior_cell.cell_queue.pop()
                 # if vehicle.move_status == True:
                 #removed logic for now each iteration is just running ICP then CTM

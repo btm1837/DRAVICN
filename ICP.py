@@ -95,7 +95,19 @@ def ICP(data,simulation_time):
                 i_cell.cell_queue.append(v)
                 j_travel_time_delay = j_cell.cell_travel_time
                 j_travel_time_delay = j_travel_time_delay + data.exper_simulation_time_interval
-                j_cell.cell_travel_time_list.append(travel_time)
+                j_cell.cell_travel_time_list.append(j_travel_time_delay)
+        if len(sending_flow)>0:
+            for v in sending_flow:
+                v.set_turning_move()
+                # get the cell it is leaving from
+                # i_cell_id = intersection.incoming_cells[v.turning_move[0]]
+                i_cell = data.cell_dict[v.turning_move[0]]
+                # get the cell the car is going to
+                j_cell = data.cell_dict[v.turning_move[1]]
+                i_cell.cell_queue.append(v)
+                j_travel_time_delay = j_cell.cell_travel_time
+                j_travel_time_delay = j_travel_time_delay + data.exper_simulation_time_interval
+                j_cell.cell_travel_time_list.append(j_travel_time_delay)
 
     return
 
