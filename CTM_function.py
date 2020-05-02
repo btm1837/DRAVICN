@@ -56,23 +56,23 @@ import numpy as np
 #         ni_t1[i] = sum(nim_t1[i,:])
 #     return(yi_t1,nim_t1)
 
-def calc_backwards_wave_speed(cell, vehicle_type_dict, vehicle_length):
-    backwards_wave_speed = 0
-    # is cell density defined by number in divided by max number or number in divided by length of cell?
-    #Backwards wave speed is used in the calulation of moving vehicles
-    # BWS is dependant on vehicle length and the number in as well as the
-    if cell.number_in_t_i == 0:
-        backwards_wave_speed = cell.free_flow_speed * 1000000000000
-        return backwards_wave_speed
-    backwards_wave_speed_sum=0
-    for vehicle_type in vehicle_type_dict.keys():
-        backwards_wave_speed_sum = backwards_wave_speed_sum + (
-            ( cell.number_in_t_i_make_dict[vehicle_type] / cell.max_vehicles)/
-            (cell.number_in_t_i / cell.max_vehicles)
-                               ) * vehicle_type_dict[vehicle_type]
-    # node vehicle_make_dict[vehicle_type] = reaction time
-    backwards_wave_speed = vehicle_length/backwards_wave_speed_sum
-    return backwards_wave_speed
+# def calc_backwards_wave_speed(cell, vehicle_type_dict, vehicle_length):
+#     backwards_wave_speed = 0
+#     # is cell density defined by number in divided by max number or number in divided by length of cell?
+#     #Backwards wave speed is used in the calulation of moving vehicles
+#     # BWS is dependant on vehicle length and the number in as well as the
+#     if cell.number_in_t_i == 0:
+#         backwards_wave_speed = cell.free_flow_speed * 1000000000000
+#         return backwards_wave_speed
+#     backwards_wave_speed_sum=0
+#     for vehicle_type in vehicle_type_dict.keys():
+#         backwards_wave_speed_sum = backwards_wave_speed_sum + (
+#             ( cell.number_in_t_i_make_dict[vehicle_type] / cell.max_vehicles)/
+#             (cell.number_in_t_i / cell.max_vehicles)
+#                                ) * vehicle_type_dict[vehicle_type]
+#     # node vehicle_make_dict[vehicle_type] = reaction time
+#     backwards_wave_speed = vehicle_length/backwards_wave_speed_sum
+#     return backwards_wave_speed
 
 def flow_density_bws(cell,vehicle_length,vehicle_type_dict):
     #take average reaction time
@@ -81,20 +81,20 @@ def flow_density_bws(cell,vehicle_length,vehicle_type_dict):
     return backwards_wave_speed
 
 
-def calc_max_flow(cell, vehicle_type_dict, vehicle_length,dt_val):
-    max_flow = 0
-    max_flow_sum = 0
-    # summation
-    for vehicle_type in vehicle_type_dict.keys():
-        max_flow_sum = max_flow_sum + (
-            (cell.number_in_t_i_make_dict[vehicle_type]/cell.max_vehicles)/
-            (cell.number_in_t_i/cell.max_vehicles)
-        ) * vehicle_type_dict[vehicle_type]
-    max_flow_calc = (1/((cell.free_flow_speed * max_flow_sum)+vehicle_length))
-    max_flow = cell.free_flow_speed * max_flow_calc
-    max_flow = max_flow * (dt_val/3600)
-    cell.set_cell_capacity(round(max_flow,0))
-    return round(max_flow,0)
+# def calc_max_flow(cell, vehicle_type_dict, vehicle_length,dt_val):
+#     max_flow = 0
+#     max_flow_sum = 0
+#     # summation
+#     for vehicle_type in vehicle_type_dict.keys():
+#         max_flow_sum = max_flow_sum + (
+#             (cell.number_in_t_i_make_dict[vehicle_type]/cell.max_vehicles)/
+#             (cell.number_in_t_i/cell.max_vehicles)
+#         ) * vehicle_type_dict[vehicle_type]
+#     max_flow_calc = (1/((cell.free_flow_speed * max_flow_sum)+vehicle_length))
+#     max_flow = cell.free_flow_speed * max_flow_calc
+#     max_flow = max_flow * (dt_val/3600)
+#     cell.set_cell_capacity(round(max_flow,0))
+#     return round(max_flow,0)
 
 def flow_density_max_flow(cell, vehicle_type_dict, vehicle_length,dt_val):
     # relaxing density assumption going with uniform vehicle
@@ -146,10 +146,18 @@ def ctm_function_t_i(data,simulation_time):
                 calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,max_flow,backwards_wave_speed)
                 cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
             else:
-                backwards_wave_speed = calc_backwards_wave_speed(cell, data.vehicle_type_dict, data.exper_vehicle_length)
-                max_flow = calc_max_flow(cell, data.vehicle_type_dict, data.exper_vehicle_length,
-                                         dt_val = data.exper_simulation_time_interval)
-
+                max_flow = cell.cell_capacity
+                backwards_wave_speed = cell.backwards_wave_sp
+                # backwards_wave_speed = calc_backwards_wave_speed(cell, data.vehicle_type_dict, data.exper_vehicle_length)
+                backwards_wave_speed = flow_density_bws(cell=cell,
+                                                        vehicle_length=data.exper_vehicle_length,
+                                                        vehicle_type_dict=data.vehicle_type_dict)
+                # max_flow = calc_max_flow(cell, data.vehicle_type_dict, data.exper_vehicle_length,
+                #                          dt_val = data.exper_simulation_time_interval)
+                max_flow = flow_density_max_flow(cell=cell,
+                                                 vehicle_type_dict=data.vehicle_type_dict,
+                                                 vehicle_length=data.exper_vehicle_length,
+                                                 dt_val=data.exper_simulation_time_interval)
                 # This function sets cell.number_entering_cell_from_arc_make_dict
                 calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,max_flow,backwards_wave_speed)
                 cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
