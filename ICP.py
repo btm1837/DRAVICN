@@ -33,7 +33,10 @@ def ICP(data,simulation_time):
                     if list() in incoming_cell.cell_queue: incoming_cell.cell_queue.clear()
                 if len(incoming_cell.cell_queue) != 0:
                     vehicle = incoming_cell.cell_queue.pop()
-                    V.append(vehicle)
+                    if vehicle.cell_time_in == simulation_time:
+                        incoming_cell.cell_queue.append(vehicle)
+                    else:
+                        V.append(vehicle)
                     # if vehicle.move_status:
 
             # For all outgoing cells in the the intersection
@@ -46,7 +49,10 @@ def ICP(data,simulation_time):
                     if list() in incoming_cell.cell_queue: incoming_cell.cell_queue.clear()
                 vehicle = incoming_cell.cell_queue.pop()
                 # if vehicle.move_status:
-                sending_flow.append(vehicle)
+                if vehicle.cell_time_in == simulation_time:
+                    incoming_cell.cell_queue.append(vehicle)
+                else:
+                    sending_flow.append(vehicle)
         # Sort V by a FIFO priority function
         V.sort(key=lambda x: x.cell_time_in)
         # sort sending flow by same priority
@@ -92,6 +98,7 @@ def ICP(data,simulation_time):
                 if len(sending_flow)>0:
                     V.append(sending_flow.pop())
             else:
+                v.set_current_cell_location(i_cell.cell_id)
                 i_cell.cell_queue.append(v)
                 j_travel_time_delay = j_cell.cell_travel_time
                 j_travel_time_delay = j_travel_time_delay + data.exper_simulation_time_interval
@@ -104,6 +111,7 @@ def ICP(data,simulation_time):
                 i_cell = data.cell_dict[v.turning_move[0]]
                 # get the cell the car is going to
                 j_cell = data.cell_dict[v.turning_move[1]]
+                v.set_current_cell_location(i_cell.cell_id)
                 i_cell.cell_queue.append(v)
                 j_travel_time_delay = j_cell.cell_travel_time
                 j_travel_time_delay = j_travel_time_delay + data.exper_simulation_time_interval

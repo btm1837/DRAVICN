@@ -11,7 +11,7 @@ class Vehicle:
         self.origin = origin
         self.destination = destination
         self.route = routing_arcs
-        self.initial_routing = set()
+        self.initial_routing = routing_arcs
 
         self.move_status = True
 
@@ -64,14 +64,39 @@ class Vehicle:
     def set_current_cell_location(self,cell):
         # if vehicle is starting at origin then it is modeled at the begingin of a cell
         # otherwise the vehicle is put at the node at the end of its cell
-        if self.current_cell_location[0] == self.origin:
-            self.last_node_location = self.origin
-        else:
-            self.last_node_location = self.current_cell_location[1]
-
+        #new?
+        # if self.current_cell_location != cell:
+        #     if self.current_cell_location[0] == self.current_node_location:
+        #         self.last_node_location = self.current_node_location
+        #         self.last_cell_location = self.current_cell_location
+        #     elif self.current_cell_location[1]
+        if self.current_cell_location == cell:
+            return
         self.last_cell_location = self.current_cell_location
+        self.last_node_location = self.current_node_location
         self.current_cell_location = cell
         self.current_node_location = self.current_cell_location[1]
+        return
+        #old
+        # if self.current_cell_location[0] == self.origin:
+        #     self.last_node_location = self.origin
+        # else:
+        #     self.last_node_location = self.current_node_location
+        #
+        # self.last_cell_location = self.current_cell_location
+        # self.current_cell_location = cell
+        # # if self.current_cell_location[0] == self.origin:
+        # #     self.current_node_location =
+        # self.current_node_location = self.current_cell_location[1]
+
+
+    def set_origin_cell_location(self,cell):
+        # if vehicle is starting at origin then it is modeled at the begingin of a cell
+        # otherwise the vehicle is put at the node at the end of its cell
+        self.last_cell_location = cell
+        self.last_node_location = self.origin
+        self.current_cell_location = cell
+        self.current_node_location = self.origin
         return
 
     def set_next_cell_location(self):

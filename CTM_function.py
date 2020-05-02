@@ -88,19 +88,21 @@ def calc_max_flow(cell, vehicle_type_dict, vehicle_length,dt_val):
     for vehicle_type in vehicle_type_dict.keys():
         max_flow_sum = max_flow_sum + (
             (cell.number_in_t_i_make_dict[vehicle_type]/cell.max_vehicles)/
-            (cell.number_in_t_i[vehicle_type]/cell.max_vehicles)
+            (cell.number_in_t_i/cell.max_vehicles)
         ) * vehicle_type_dict[vehicle_type]
     max_flow_calc = (1/((cell.free_flow_speed * max_flow_sum)+vehicle_length))
     max_flow = cell.free_flow_speed * max_flow_calc
-    max_flow = max_flow * dt_val
+    max_flow = max_flow * (dt_val/3600)
+    cell.set_cell_capacity(round(max_flow,0))
     return round(max_flow,0)
 
 def flow_density_max_flow(cell, vehicle_type_dict, vehicle_length,dt_val):
     # relaxing density assumption going with uniform vehicle
     reaction_time = np.average(list(vehicle_type_dict.values()))
-    max_flow = (cell.free_flow_speed * reaction_time + vehicle_length)
+    max_flow = ((cell.free_flow_speed * reaction_time) + vehicle_length)
     max_flow = (1/max_flow) * cell.free_flow_speed
-    max_flow = max_flow * dt_val
+    max_flow = max_flow * (dt_val/3600)
+    cell.set_cell_capacity(round(max_flow, 0))
     return round(max_flow,0)
 
 def calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,backwards_wave_speed):
@@ -155,12 +157,12 @@ def ctm_function_t_i(data,simulation_time):
             # this is where the multi type would need to be reimplemented but for my purposes I do not need to
 
             #should move to transaction manage portion
-            temp = []
+            # temp = []
             for i in range(int(cell.number_entering_cell_from_arc[prior_cell.cell_id])):
                 vehicle = prior_cell.cell_queue.pop()
                 # if vehicle.move_status == True:
                 #removed logic for now each iteration is just running ICP then CTM
-                temp.append()
+                # temp.append(vehicle)
                 vehicle.cell_time_out = simulation_time
                 travel_time = vehicle.cell_time_out - vehicle.cell_time_in
                 prior_cell.cell_travel_time_list.append(travel_time)
@@ -168,7 +170,7 @@ def ctm_function_t_i(data,simulation_time):
                 vehicle.set_current_cell_location(cell.cell_id)
                 vehicle.route_traveled.add(cell.cell_id)
                     # vehicle.move_status = False
-            cell.cell_queue.appendleft(temp)
+                cell.cell_queue.appendleft(vehicle)
 
     return
 

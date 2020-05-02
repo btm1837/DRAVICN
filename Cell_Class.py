@@ -116,7 +116,7 @@ class Cell:
     def get_number_entering_cell_from_arc(self,cell_id):
         self.number_entering_cell_from_arc[cell_id] = 0
         for vehicle_type in self.number_in_t_i_make_dict:
-            self.number_entering_cell_from_arc[cell_id] = self.number_entering_cell_from_arc[cell_id] + self.number_in_t_i_make_dict[vehicle_type]
+            self.number_entering_cell_from_arc[cell_id] = self.number_entering_cell_from_arc[cell_id] + self.number_entering_cell_from_arc_make_dict[vehicle_type]
         return self.number_entering_cell_from_arc[cell_id]
 
     def get_number_in_t_f(self):
@@ -132,7 +132,8 @@ class Cell:
                 if self.cell_queue[0] == list():
                     self.cell_queue.clear()
             for vehicle in self.cell_queue:
-                self.number_in_t_i_make_dict[vehicle.make] = self.number_in_t_i_make_dict[vehicle.make] + 1
+                make = vehicle.make
+                self.number_in_t_i_make_dict[make] = self.number_in_t_i_make_dict[make] + 1
             self.number_in_t_i = sum(self.number_in_t_i_make_dict.values())
         return
 
@@ -158,8 +159,14 @@ class Cell:
 
     def get_cell_capacity(self):
         #for ICP need cell capacities for the cr capacities and turning move capacities
-        self.cell_capacity = max(self.max_vehicles - self.number_in_t_i,0)
+        if self.cell_capacity == 0:
+            self.cell_capacity = max(self.max_vehicles - self.number_in_t_i, 0)
         return self.cell_capacity
+
+    def set_cell_capacity(self, new_capacity):
+        # for ICP and CTM cell capacity should be defined by big Q, so will take that from CTM.
+        self.cell_capacity = new_capacity
+        return
 
     # def put_vehicles_in_number_t_i_make_dict(self):
     #     for make in self.number_in_t_i_make_dict:

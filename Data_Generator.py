@@ -6,6 +6,7 @@ import Intersections_Class
 import ICP
 import CTM_function
 import random
+import pandas as pd
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -77,7 +78,7 @@ class simulation():
         # self.cr_equivalent_flow = {}
 
         #Data recording structures
-        self.columns_v = ['vehicle_id', 'origin', 'destination', 'initial_route', 'route_traveled', 'time_taken', 'time_out',
+        self.columns_v = ['vehicle_ID', 'origin', 'destination', 'initial_route', 'route_traveled', 'time_taken', 'time_out',
                      'time_in']
         self.columns_opt = ['simulation_time', 'cost']
         self.df_vehicles = pandas.DataFrame(columns=self.columns_v)
@@ -241,7 +242,12 @@ class simulation():
             last_node = vehicle.last_node_location
             current_node = vehicle.current_node_location
             self.trip_net_demand[last_node,vehicle_id] = 0
-            self.trip_net_demand[current_node,vehicle_id] = -1
+            # remove vehicle if it is done
+            if vehicle.destination == current_node:
+                for node in self.node_set:
+                    del self.trip_net_demand[node,vehicle_id]
+            else:
+                self.trip_net_demand[current_node, vehicle_id] = -1
             # if vehicle not in self.cell_dict[current_node].cell_queue:
             #     cell = self.cell_dict[current_node]
             #     cell.
@@ -281,7 +287,7 @@ class simulation():
                 #get data for output
                 removed_v.time_out_sim = simulation_time
                 time_taken = removed_v.time_out_sim - removed_v.time_in_sim
-                list = [removed_v.vehicle_id,removed_v.origin,removed_v.destination,removed_v.initial_routing,
+                list = [removed_v.vehicle_ID,removed_v.origin,removed_v.destination,removed_v.initial_routing,
                         removed_v.route_traveled,time_taken,removed_v.time_out_sim,removed_v.time_in_sim]
                 temp = pandas.DataFrame([list],columns=self.columns_v)
                 self.df_vehicles= self.df_vehicles.append(temp)
@@ -290,7 +296,7 @@ class simulation():
                 # if the experiement is with coordination tell the optimiation not to include this trip
                 # otherwise in un-coordinated runs this trip is already removed from tripset
                 if self.exper_coordination == 1:
-                    self.trip_set.remove(removed_v.vehicle_id)
+                    self.trip_set.remove(removed_v.vehicle_ID)
 
                 self.sink_dict[node][1] = self.sink_dict[node][1] +1
         return
@@ -370,8 +376,7 @@ class simulation():
                 vehicle = self.vehicle_dict[trip]
                 for cell_id in vehicle.route:
                     if cell_id[0] == vehicle.origin:
-                        vehicle.current_cell_location = cell_id
-                        vehicle.set_current_cell_location(cell_id)
+                        vehicle.set_origin_cell_location(cell_id)
                         vehicle.route_traveled.add(cell_id)
                         vehicle.cell_time_in = simulation_time
                         vehicle.time_in_sim = simulation_time
@@ -396,9 +401,11 @@ class simulation():
             for outgoing_cell_id in intersection.outgoing_cells:
                 outgoing_cell = self.cell_dict[outgoing_cell_id]
                 outgoing_cell.get_number_in_t_i_and_make_dict_from_cell_queue()
+                self.number_in_cell[outgoing_cell_id] = outgoing_cell.number_in_t_i
             for incoming_cell_id in intersection.incoming_cells:
                 incoming_cell = self.cell_dict[incoming_cell_id]
                 incoming_cell.get_number_in_t_i_and_make_dict_from_cell_queue()
+                self.number_in_cell[incoming_cell_id] = incoming_cell.number_in_t_i
         return
 
 
@@ -518,6 +525,9 @@ class simulation():
 
     def transaction_manager_post_vehicle_move(self,simulation_time):
     # This is the main transaction manager proceedure
+        # update outgoing_cells to be able to use CTM on next time around using cell queue
+        self.update_ICP_cells_number_in_cell()
+
         # first create any new trips
         self.create_trips(simulation_time=simulation_time)
         #set the net demand for those trips
@@ -525,9 +535,6 @@ class simulation():
 
         #set the arc travel cost for those trips
         self.set_moving_arc_cost()
-
-        #update outgoing_cells to be able to use CTM on next time around using cell queue
-        self.update_ICP_cells_number_in_cell()
 
         # send some vehicles down the drain
         self.sink_logic(simulation_time=simulation_time)
@@ -610,3 +617,9 @@ class simulation():
         return self.intersection_dict
     def get_cell_iteration_dict(self):
         return self.cell_iteration_dict
+    def get_tnd_df_simple(self):
+        self.tnd_df_simple = pd.DataFrame.from_dict(self.trip_net_demand,orient='index',columns=['net_demand'])
+        self.tnd_df_simple = self.tnd_df_simple.loc[self.tnd_df_simple['net_demand'] != 0,:]
+        return self.tnd_df_simple
+
+

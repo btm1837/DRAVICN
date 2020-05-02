@@ -57,9 +57,6 @@ def initialize_setup():
 
     return data
 
-# def test(data):
-#     data.arc_file = 'jiberish'
-#     return
 
 def transaction_manager_sim_loop(simulation_time,data):
     # move some vehilces down roads
@@ -103,11 +100,14 @@ def transaction_manager_sim_loop(simulation_time,data):
 
 def run_simulation():
     data = initialize_setup()
-
+    stop_list = [(i * 10 * data.exper_simulation_time_interval) for i in range(10)]
     for simulation_time in range(int(30),int(data.exper_total_sim_time),int(data.exper_simulation_time_interval)):
         transaction_manager_sim_loop(simulation_time=simulation_time,
                                      data= data)
         print(simulation_time)
+
+        if simulation_time in stop_list:
+            print('sim time: \t' + str(simulation_time))
 
     return data.df_vehicles,data.df_opt
 
