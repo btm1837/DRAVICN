@@ -1,6 +1,7 @@
 import pandas
 import collections
 import numpy as np
+import CTM_function
 
 class Cell:
     """
@@ -137,8 +138,6 @@ class Cell:
             self.number_in_t_i = sum(self.number_in_t_i_make_dict.values())
         return
 
-
-
     # def set_number_in_t_f_make_dict(self:
     #     nu
     def get_receiving_flow(self):
@@ -177,5 +176,21 @@ class Cell:
     #
     #         for make in self.number_in_t_i_make_dict:
 
+    def get_cell_metrics_from_speed(self,simulation_time_unit,vehicle_length,vehicle_type_dict):
+        # turns out these metrics are all based on vehicle movement speed
+        #
+        self.length = self.free_flow_speed * (simulation_time_unit/3600)
+        self.max_vehicles = self.length / vehicle_length
+        self.cell_travel_time = simulation_time_unit
 
+        #
+        self.max_flow = CTM_function.flow_density_max_flow(cell=self,
+                                                           vehicle_type_dict=vehicle_type_dict,
+                                                           vehicle_length=vehicle_length,
+                                                           dt_val=simulation_time_unit)
+        self.backwards_wave_speed = CTM_function.flow_density_bws(cell=self,
+                                                 vehicle_length= vehicle_length,
+                                                 vehicle_type_dict=vehicle_type_dict)
+
+        return
 

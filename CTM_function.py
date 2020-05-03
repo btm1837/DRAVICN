@@ -125,7 +125,7 @@ def calc_number_in_t_f_make_dict(cell,next_cell):
 
     return
 
-def ctm_function_t_i(data,simulation_time):
+def ctm_function_t_i_heterogenous(data,simulation_time):
     # function to use to evaluate CTM
     for start_cell in data.cell_iteration_dict.keys():
         for cell_key in data.cell_iteration_dict[start_cell]:
@@ -182,6 +182,33 @@ def ctm_function_t_i(data,simulation_time):
 
     return
 
+def ctm_function_t_i_homogenous(data,simulation_time):
+    # function to use to evaluate CTM
+    for start_cell in data.cell_iteration_dict.keys():
+        for cell_key in data.cell_iteration_dict[start_cell]:
+            cell = data.cell_dict[cell_key]
+            prior_cell=data.cell_dict[cell.prior_cell]
+            if prior_cell.number_in_t_i == 0:
+                cell.number_entering_cell_from_arc[prior_cell.cell_id] = 0
+
+                calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,cell.max_flow,cell.backwards_wave_speed)
+                cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
+
+            for i in range(int(cell.number_entering_cell_from_arc[prior_cell.cell_id])):
+                vehicle = prior_cell.cell_queue.pop()
+                # if vehicle.move_status == True:
+                #removed logic for now each iteration is just running ICP then CTM
+                # temp.append(vehicle)
+                vehicle.cell_time_out = simulation_time
+                travel_time = vehicle.cell_time_out - vehicle.cell_time_in
+                prior_cell.cell_travel_time_list.append(travel_time)
+                vehicle.cell_time_in = simulation_time
+                vehicle.set_current_cell_location(cell.cell_id)
+                vehicle.route_traveled.add(cell.cell_id)
+                    # vehicle.move_status = False
+                cell.cell_queue.appendleft(vehicle)
+
+    return
 
 def ctm_function_t_f(data):
             #number in cell at next time
