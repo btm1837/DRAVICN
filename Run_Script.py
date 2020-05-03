@@ -23,16 +23,14 @@ def initialize_setup():
     cell_file = r"cells.csv"
     experiment_file = r"Experiments.csv"
     cell_iteration_dict_file = r"cell_iteration_list.csv"
+    path = r'C:\Users\bmaru\Documents\Thesis Docs\experiment_files'
     simulation_time = 0
 
     data = Data_Generator.simulation(arc_file=arc_file,
-                                     node_file=node_file,
                                      trip_file=trip_file,
                                      vehicle_file=vehicle_file,
-                                     cell_file=cell_file,
                                      experiment_file=experiment_file,
-                                     cell_iteration_list_file= cell_iteration_dict_file)
-    #                            experiment_file=experiment_file)
+                                     path=path)
 
     optimization_model = Optimization.MinCostFlow(node_set=data.get_node_set(),
                                                   trip_set=data.get_trip_set(),
@@ -60,7 +58,7 @@ def initialize_setup():
 
 def transaction_manager_sim_loop(simulation_time,data):
     # move some vehilces down roads
-    CTM_function.ctm_function_t_i(data=data,
+    CTM_function.ctm_function_t_i_homogenous(data=data,
                                   simulation_time=simulation_time)
 
     # Set number of vehicles in cells for ICP and post CTM operations

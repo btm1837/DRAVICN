@@ -123,7 +123,7 @@ class Intersection:
             for outgoing_cell in self.outgoing_cells:
                 if self.cr_for_arc_i[incoming_cell] == 'NW':
                     if self.cr_for_arc_i[outgoing_cell] =='NW':
-                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('NW')
+                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ['NW']
                     if self.cr_for_arc_i[outgoing_cell] =='NE':
                         self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('NW','NE')
                     if self.cr_for_arc_i[outgoing_cell] =='SW':
@@ -134,7 +134,7 @@ class Intersection:
                     if self.cr_for_arc_i[outgoing_cell] =='NW':
                         self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('NE','NW')
                     if self.cr_for_arc_i[outgoing_cell] =='NE':
-                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('NE')
+                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ['NE']
                     if self.cr_for_arc_i[outgoing_cell] =='SW':
                         self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('NE', 'NE','SW')
                     if self.cr_for_arc_i[outgoing_cell] =='SE':
@@ -145,7 +145,7 @@ class Intersection:
                     if self.cr_for_arc_i[outgoing_cell] =='NE':
                         self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('SW','SE','NE')
                     if self.cr_for_arc_i[outgoing_cell] =='SW':
-                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('SW')
+                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ['SW']
                     if self.cr_for_arc_i[outgoing_cell] =='SE':
                         self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('SW','SE')
                 if self.cr_for_arc_i[incoming_cell] == 'SE':
@@ -156,7 +156,7 @@ class Intersection:
                     if self.cr_for_arc_i[outgoing_cell] =='SW':
                         self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('SE','SW')
                     if self.cr_for_arc_i[outgoing_cell] =='SE':
-                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ('SE')
+                        self.cr_subset_from_i_to_j[incoming_cell,outgoing_cell] = ['SE']
         return
 
 

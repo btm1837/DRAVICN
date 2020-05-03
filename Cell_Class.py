@@ -17,7 +17,7 @@ class Cell:
 
     """
 
-    def __init__(self, cell_id, start_node, end_node, free_flow_speed, max_vehicles, cell_length, cell_travel_time,direction):
+    def __init__(self, cell_id, start_node, end_node, free_flow_speed,direction):
         # General cell identification attributes
         self.cell_id = cell_id
         self.direction = direction
@@ -52,8 +52,18 @@ class Cell:
 
         # uf , speed if vehicles are moving freely
         self.free_flow_speed = free_flow_speed
-        self.max_vehicles = max_vehicles
-        self.length = cell_length
+        self.max_vehicles = 0
+        self.length = 0
+        # for transaction manager
+        self.cell_travel_time = 0
+
+        # list of travel times through cell
+        self.cell_travel_time_list = [self.cell_travel_time]
+
+        # for ICP need cell capacity
+        self.cell_capacity = 0
+
+
         self.num_vehicle_types = 0
         self.start_node = start_node
         self.end_node = end_node
@@ -68,14 +78,7 @@ class Cell:
         # prior cell
         self.prior_cell = ''
 
-        # for transaction manager
-        self.cell_travel_time = cell_travel_time
 
-        # list of travel times through cell
-        self.cell_travel_time_list = [cell_travel_time]
-
-        # for ICP need cell capacity
-        self.cell_capacity = 0
 
     # Getters Block
     def get__(self):
@@ -167,14 +170,6 @@ class Cell:
         self.cell_capacity = new_capacity
         return
 
-    # def put_vehicles_in_number_t_i_make_dict(self):
-    #     for make in self.number_in_t_i_make_dict:
-    #
-    #
-    #     for vehicle in self.cell_queue:
-    #         if vehicle.make in self.number_in_t_i_make_dict:
-    #
-    #         for make in self.number_in_t_i_make_dict:
 
     def get_cell_metrics_from_speed(self,simulation_time_unit,vehicle_length,vehicle_type_dict):
         # turns out these metrics are all based on vehicle movement speed
@@ -182,7 +177,7 @@ class Cell:
         self.length = self.free_flow_speed * (simulation_time_unit/3600)
         self.max_vehicles = self.length / vehicle_length
         self.cell_travel_time = simulation_time_unit
-
+        self.cell_travel_time_list= [self.cell_travel_time]
         #
         self.max_flow = CTM_function.flow_density_max_flow(cell=self,
                                                            vehicle_type_dict=vehicle_type_dict,
@@ -191,6 +186,6 @@ class Cell:
         self.backwards_wave_speed = CTM_function.flow_density_bws(cell=self,
                                                  vehicle_length= vehicle_length,
                                                  vehicle_type_dict=vehicle_type_dict)
-
+        self.cell_capacity = self.max_vehicles
         return
 

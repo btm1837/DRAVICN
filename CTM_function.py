@@ -102,7 +102,7 @@ def flow_density_max_flow(cell, vehicle_type_dict, vehicle_length,dt_val):
     max_flow = ((cell.free_flow_speed * reaction_time) + vehicle_length)
     max_flow = (1/max_flow) * cell.free_flow_speed
     max_flow = max_flow * (dt_val/3600)
-    cell.set_cell_capacity(round(max_flow, 0))
+
     return round(max_flow,0)
 
 def calc_vehicles_moving_cells_type(cell,prior_cell,vehicle_type_dict,max_flow,backwards_wave_speed):
@@ -190,7 +190,7 @@ def ctm_function_t_i_homogenous(data,simulation_time):
             prior_cell=data.cell_dict[cell.prior_cell]
             if prior_cell.number_in_t_i == 0:
                 cell.number_entering_cell_from_arc[prior_cell.cell_id] = 0
-
+            else:
                 calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,cell.max_flow,cell.backwards_wave_speed)
                 cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
 

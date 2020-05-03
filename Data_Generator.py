@@ -7,6 +7,7 @@ import ICP
 import CTM_function
 import random
 import pandas as pd
+import os
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -17,24 +18,25 @@ class simulation():
 
 
     """
-    def __init__(self,arc_file,node_file,trip_file,vehicle_file,cell_file,experiment_file,cell_iteration_list_file):
+    def __init__(self,arc_file,trip_file,vehicle_file,experiment_file,path):
         """ create values based on input parameters"""
         # node set
         self.node_set = set()
 
         # arc data parameters
-        self.arc_data = pandas.read_csv(arc_file, sep=',')
+        arc_file_path = os.path.join(path,arc_file)
+        self.arc_data = pandas.read_csv(arc_file_path, sep=',')
         self.arc_capacity={}
         self.arc_cost={}
         self.arc_set=set()
 
         # initiate the cell list
         self.cell_dict = {}
-        self.cell_iteration_pandas_data = pandas.read_csv(cell_iteration_list_file)
         self.cell_iteration_dict = {}
 
         # Trip data parameters
-        self.trip_data=pandas.read_csv(trip_file)
+        trip_file_path = os.path.join(path,trip_file)
+        self.trip_data=pandas.read_csv(trip_file_path)
         self.trip_set=set()
         self.trip_net_demand = {}
         self.trip_vehicle_type_origin_dest = {}
@@ -46,7 +48,8 @@ class simulation():
 
 
         # vehicle data parameters
-        self.vehicle_data = pandas.read_csv(vehicle_file)
+        vehicle_file_path = os.path.join(path,vehicle_file)
+        self.vehicle_data = pandas.read_csv(vehicle_file_path)
         self.initial_vehicle_routes = set()
         self.vehicle_dict = {}
         #vehicle types
@@ -85,7 +88,8 @@ class simulation():
         self.df_opt = pandas.DataFrame(columns=self.columns_opt)
 
         # experiment data parameters
-        self.exper_data = pandas.read_csv('Experiments.csv')
+        experiment_file_path = os.path.join(path,experiment_file)
+        self.exper_data = pandas.read_csv(experiment_file_path)
         self.exper_experiment_list = set(self.exper_data['Experiment'])
         self.exper_num='NA'
         self.exper_coordination = 'NA'
@@ -260,11 +264,11 @@ class simulation():
             cell = self.cell_dict[cell_key]
             travel_time = cell.get_and_set_cell_travel_time()
             self.arc_cost[cell.cell_id] = travel_time
-            self.arc_data.loc[(self.arc_data['Start'] == 'start') & (self.arc_data['End'] == 'B'), 'Cost'] = travel_time
+            # not sure why the below statement was here
+            # self.arc_data.loc[(self.arc_data['Start'] == 'start') & (self.arc_data['End'] == 'B'), 'Cost'] = travel_time
         return
-    # def add_vehicles_to_sim(self):
 
-    #creating the sink logic to remove vehcles from a cell
+    # creating the sink logic to remove vehicles from a cell
     def sink_logic(self,simulation_time):
         #clear the sink current capacities
         self.set_sink_capcity_to_zero()
@@ -315,6 +319,23 @@ class simulation():
             self.arc_capacity[item[1][0],item[1][1]]=item[1][3]
             self.arc_cost[item[1][0],item[1][1]]=item[1][2]
             self.arc_set.add((item[1][0],item[1][1]))
+
+        return
+
+    def set_arcs_from_cells(self):
+        """
+        Uses the pandas object created by pandas.read_csv('arcs.csv') to populate:
+        self.arc_capacity
+        self.arc_cost
+        self.arc_set
+
+        :return:
+        """
+        for cell_id in self.cell_dict:
+            cell_obj = self.cell_dict[cell_id]
+            self.arc_capacity[cell_id] = cell_obj.cell_capacity
+            self.arc_cost[item[1][0], item[1][1]] = item[1][2]
+            self.arc_set.add((item[1][0], item[1][1]))
 
         return
 
@@ -475,10 +496,10 @@ class simulation():
                                                       start_node=item[1][0],
                                                       end_node=item[1][1],
                                                       free_flow_speed=item[1][5],
-                                                      max_vehicles=item[1][3],
-                                                      cell_length=item[1][4],
-                                                      cell_travel_time=item[1][2],
                                                       direction=item[1][6])
+            self.cell_dict[cell_id].get_cell_metrics_from_speed(simulation_time_unit=self.exper_simulation_time_interval,
+                                                                vehicle_length=self.exper_vehicle_length,
+                                                                vehicle_type_dict=self.vehicle_type_dict)
             for make in self.vehicle_type_dict:
                 self.cell_dict[cell_id].number_in_t_i_make_dict[make] = 0
             self.cell_dict[cell_id].cell_queue.clear()
