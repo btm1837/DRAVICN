@@ -117,14 +117,14 @@ end_time = time.time()
 print("--- runtime = %s seconds ---" %(end_time - start_time))
 
 
-#pass by ref verification
-def test1():
-    data =initialize_setup()
-    for i in range(10):
-        j = test2(data,i)
-    return j
-
-def test2(data,i):
-    data.exper_simulation_time_interval = str(data.exper_simulation_time_interval) + str(i)+'this'
-    j =  data.exper_simulation_time_interval
-    return j
+# #pass by ref verification
+# def test1():
+#     data =initialize_setup()
+#     for i in range(10):
+#         j = test2(data,i)
+#     return j
+#
+# def test2(data,i):
+#     data.exper_simulation_time_interval = str(data.exper_simulation_time_interval) + str(i)+'this'
+#     j =  data.exper_simulation_time_interval
+#     return j

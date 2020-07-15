@@ -495,8 +495,8 @@ class simulation():
             self.cell_dict[cell_id] = Cell_Class.Cell(cell_id=cell_id,
                                                       start_node=item[1][0],
                                                       end_node=item[1][1],
-                                                      free_flow_speed=item[1][5],
-                                                      direction=item[1][6])
+                                                      free_flow_speed=item[1][2],
+                                                      direction=item[1][3])
             self.cell_dict[cell_id].get_cell_metrics_from_speed(simulation_time_unit=self.exper_simulation_time_interval,
                                                                 vehicle_length=self.exper_vehicle_length,
                                                                 vehicle_type_dict=self.vehicle_type_dict)

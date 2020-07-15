@@ -1,3 +1,3 @@
 Node,Type,Uniform_Flow_perHour
-start,source,600
-end,sink,600
+start,source,4000
+end,sink,4000
