@@ -44,10 +44,11 @@ def get_string_list(size):
 
 # def make_network(set_up_file,path):
 if __name__ == '__main__':
-    path = r'C:\Users\bmaru\Documents\Thesis Docs\experiment_files'
+    path = r'D:\Documents\Thesis_Docs\experiment_files'
     set_up_file = r'set_up1.yaml'
     # network and source/sinks file
     file_path = os.path.join(path,set_up_file)
+
     with open(file_path, 'r') as f:
         data_dict = yaml.load(f, Loader=yaml.CLoader)
 
@@ -262,7 +263,7 @@ if __name__ == '__main__':
     outer_intersections['E'] = vertical_road_data_dict[total_vertical_roads-1]['intersection']
     outer_intersections['E_A'] = list(outer_intersections['E'].keys())
 
-    outer_intersections['N_rk'] =
+    # outer_intersections['N_rk'] =
 
     for source_set in data_dict['source_nodes']:
         source_set_dict = data_dict['source_nodes'][source_set]
@@ -286,9 +287,9 @@ if __name__ == '__main__':
 
         # need to get the road it is on for the speed
         # need to determine how to link it into the network
-        node1 =
-        node2 =
-        road_key =
+        # node1 =
+        # node2 =
+        # road_key =
 
         # self.length = self.free_flow_speed * simulation_time_interval
         # self.max_vehicles = self.length / vehicle_length
