@@ -32,6 +32,30 @@ def get_string_list(size):
         list_s.append(s)
     return list_s
 
+def sink_nodes_label_gen_func():
+    num=1
+    while True:
+        yield "end_"+str(num)
+        num+=1
+
+sink_nodes_label_gen= sink_nodes_label_gen_func()
+
+def sink_gen():
+    for s in sink_nodes_label_gen:
+        return s
+
+
+def source_nodes_label_gen_func():
+    num=1
+    while True:
+        yield "start_"+str(num)
+        num+=1
+
+source_nodes_label_gen= source_nodes_label_gen_func()
+
+def source_gen():
+    for s in source_nodes_label_gen:
+        return s
 # for s in iter_all_strings():
 #     print(s)
 #     if s == 'bb':
@@ -283,33 +307,19 @@ if __name__ == '__main__':
             print("no more intersection nodes on:\t" + str(grid_location))
             print("fatal data entry error")
             # return
-        sink_node = label_gen()
+        source_node = source_gen()
 
-        # need to get the road it is on for the speed
-        # need to determine how to link it into the network
-        # node1 =
-        # node2 =
-        # road_key =
+        if grid_location =='W':
+            temp_list_sink= [source_node,node ,vertical_road_data_dict[road_key]['speed'],grid_location]
+        elif grid_location=='E':
+            temp_list_sink = [source_node,node, vertical_road_data_dict[road_key]['speed'], grid_location]
+        elif grid_location=='S':
+            temp_list_sink= [source_node,node, vertical_road_data_dict[road_key]['speed'],grid_location]
+        elif grid_location=='N':
+            temp_list_sink = [source_node,node , vertical_road_data_dict[road_key]['speed'], grid_location]
 
-        # self.length = self.free_flow_speed * simulation_time_interval
-        # self.max_vehicles = self.length / vehicle_length
-        # self.cell_travel_time = simulation_time_unit
-        # self.cell_travel_time_list= [self.cell_travel_time]
-        # #
-        # self.max_flow = CTM_function.flow_density_max_flow(cell=self,
-        #                                                    vehicle_type_dict=vehicle_type_dict,
-        #                                                    vehicle_length=vehicle_length,
-        #                                                    dt_val=simulation_time_unit)
-        # self.backwards_wave_speed = CTM_function.flow_density_bws(cell=self,
-        #                                          vehicle_length= vehicle_length,
-        #                                          vehicle_type_dict=vehicle_type_dict)
-        # self.cell_capacity = self.max_vehicles
-
-
-
-        temp_list1 = [node1, node2, vertical_road_data_dict[road_key]['speed'], 'W']
-        temp_df1 = pd.DataFrame([temp_list1], columns=col_list)
-        data_df1 = data_df.append(temp_df1)
+        temp_df1 = pd.DataFrame([temp_list_sink], columns=col_list)
+        data_df = data_df.append(temp_df1)
 
     for sink_set in data_dict['sink_nodes']:
         sink_set_dict = data_dict['sink_nodes'][sink_set]
@@ -329,10 +339,20 @@ if __name__ == '__main__':
             print("no more intersection nodes on:\t" + str(grid_location))
             print("fatal data entry error")
             # return
+        sink_node = sink_gen()
 
-    temp_list = [node1, node2, vertical_road_data_dict[road_key]['speed'], 'W']
-    temp_df = pd.DataFrame([temp_list1], columns=col_list)
-    data_df = data_df.append(temp_df1)
+        if grid_location =='W':
+            temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
+        elif grid_location=='E':
+            temp_list_sink = [node,sink_node , vertical_road_data_dict[road_key]['speed'], grid_location]
+        elif grid_location=='S':
+            temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
+        elif grid_location=='N':
+            temp_list_sink = [node,sink_node , vertical_road_data_dict[road_key]['speed'], grid_location]
+
+
+        temp_df = pd.DataFrame([temp_list_sink], columns=col_list)
+        data_df = data_df.append(temp_df)
 
 # Then create the sink file with that designation, and insert the uniform flow per hour
 
@@ -356,7 +376,8 @@ if __name__ == '__main__':
                                                  create_using=nx.DiGraph)
     pos = nx.kamada_kawai_layout(network_graph)
     nx.draw(network_graph, pos=pos, with_labels=True, node_size=200, alpha=0.3, arrows=True)
-    nx.draw_networkx_edge_labels(network_graph, pos, edge_labels=arc_cost, label_pos=0.3, font_size=7)
+    # nx.draw_networkx_edge_labels(network_graph, pos, edge_labels=arc_cost, label_pos=0.3, font_size=7)
+    # nx.draw_networkx_edge_labels(network_graph, pos,edge_labels=arc_set, label_pos=0.3, font_size=7)
     ax = plt.gca()
     ax.set_ylim(-1,1)
     ax.set_xlim(-1, 1)
