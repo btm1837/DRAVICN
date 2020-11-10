@@ -69,7 +69,7 @@ def source_gen():
 # def make_network(set_up_file,path):
 if __name__ == '__main__':
     path = r'D:\Documents\Thesis_Docs\experiment_files'
-    set_up_file = r'set_up1.yaml'
+    set_up_file = r'set_up_2.yaml'
     # network and source/sinks file
     file_path = os.path.join(path,set_up_file)
 
@@ -264,8 +264,8 @@ if __name__ == '__main__':
             if node == vertical_road_data_dict[road_key]['total_arcs'] - 1:
                 vertical_road_data_dict[road_key]['end'] = node2
 
-            temp_list_e = [node1, node2,vertical_road_data_dict[road_key]['speed'],'W' ]
-            temp_list_w = [node2, node1, vertical_road_data_dict[road_key]['speed'], 'E']
+            temp_list_e = [node1, node2,vertical_road_data_dict[road_key]['speed'],'N' ]
+            temp_list_w = [node2, node1, vertical_road_data_dict[road_key]['speed'], 'S']
             temp_df = pd.DataFrame([temp_list_e,temp_list_w], columns=col_list)
             data_df = data_df.append(temp_df)
 
@@ -288,7 +288,10 @@ if __name__ == '__main__':
     outer_intersections['E_A'] = list(outer_intersections['E'].keys())
 
     # outer_intersections['N_rk'] =
-
+    source_nodes_list=[]
+    sink_nodes_list=[]
+    type_list=[]
+    ufph_list = []
     for source_set in data_dict['source_nodes']:
         source_set_dict = data_dict['source_nodes'][source_set]
         grid_location = source_set_dict['grid_location']
@@ -310,15 +313,19 @@ if __name__ == '__main__':
         source_node = source_gen()
 
         if grid_location =='W':
-            temp_list_sink= [source_node,node ,vertical_road_data_dict[road_key]['speed'],grid_location]
+            temp_list_source= [source_node,node ,vertical_road_data_dict[road_key]['speed'],grid_location]
         elif grid_location=='E':
-            temp_list_sink = [source_node,node, vertical_road_data_dict[road_key]['speed'], grid_location]
+            temp_list_source = [source_node,node, vertical_road_data_dict[road_key]['speed'], grid_location]
         elif grid_location=='S':
-            temp_list_sink= [source_node,node, vertical_road_data_dict[road_key]['speed'],grid_location]
+            temp_list_source= [source_node,node, vertical_road_data_dict[road_key]['speed'],grid_location]
         elif grid_location=='N':
-            temp_list_sink = [source_node,node , vertical_road_data_dict[road_key]['speed'], grid_location]
+            temp_list_source = [source_node,node , vertical_road_data_dict[road_key]['speed'], grid_location]
 
-        temp_df1 = pd.DataFrame([temp_list_sink], columns=col_list)
+        source_nodes_list.append(source_node)
+        type_list.append("source")
+        ufph_list.append(ufph)
+
+        temp_df1 = pd.DataFrame([temp_list_source], columns=col_list)
         data_df = data_df.append(temp_df1)
 
     for sink_set in data_dict['sink_nodes']:
@@ -341,6 +348,10 @@ if __name__ == '__main__':
             # return
         sink_node = sink_gen()
 
+        source_nodes_list.append(sink_node)
+        type_list.append("sink")
+        ufph_list.append(ufph)
+
         if grid_location =='W':
             temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
         elif grid_location=='E':
@@ -358,9 +369,18 @@ if __name__ == '__main__':
 
 ########################################################################################################################
     # write to file
-    # filename = data_dict['filename']
-    # path = data_dict['path']
-    # data_df.to_csv(os.path.join(path,filename),sep=',')
+    filename = 'arcs_'+ data_dict['run_id'] +'.csv'
+    path = data_dict['path']
+    path = os.path.join(path,data_dict['run_id'])
+    if not os.path.exists(path):
+        os.makedirs(path)
+    data_df.to_csv(os.path.join(path,filename),sep=',',index=False)
+
+    ss_node_list = source_nodes_list+sink_nodes_list
+
+    source_sink_df = pd.DataFrame(list(zip(ss_node_list,type_list,ufph_list)),columns=['Node','Type','Uniform_Flow_perHour'])
+    new_file_name= 'source_sink_' + data_dict['run_id'] +'.csv'
+    source_sink_df.to_csv(os.path.join(path,new_file_name),sep=',',index=False)
 
     arc_capacity = {}
     arc_cost = {}

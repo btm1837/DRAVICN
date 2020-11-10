@@ -345,7 +345,7 @@ class simulation():
         self.node_set
         :return:
         """
-        self.node_set = set(self.arc_data['Start'])
+        self.node_set = set(self.arc_data['Start']) | set(self.arc_data['End'])
         return
 
     def set_vehicle_type_dict(self):
@@ -480,7 +480,7 @@ class simulation():
                 cell.intersection_status = 'pre_start'
                 start_node = cell.start_node
                 end_node = cell.end_node
-                if end_node=='start' or end_node =='end':
+                if 'start' in end_node or 'end' in end_node:
                     continue
 
                 next_node = [next_node for (c_end_node, next_node) in self.arc_set if c_end_node == end_node and next_node != start_node][0]

@@ -5,6 +5,7 @@ import Data_Generator
 import CTM_function
 import ICP
 import pandas as pd
+import os
 #graphing tools
 import numpy as np
 import networkx as nx
@@ -15,15 +16,23 @@ start_time = time.time()
 
 # Initializing the model
 def initialize_setup():
-    # arc_file = 'arcs.csv'
-    arc_file = r'arcs_set3.csv'
-    node_file = r'nodes.csv'
-    trip_file = r'source_sink.csv'
-    vehicle_file = r"vehicles.csv"
-    cell_file = r"cells.csv"
+    run_id = 'setup_1'
+    path = r'D:\Documents\Thesis_Docs\experiment_files'
+    path = os.path.join(path,run_id)
+    arc_file = 'arcs_'+ run_id+'.csv'
+    trip_file = 'source_sink_' + run_id + '.csv'
     experiment_file = r"Experiments.csv"
-    cell_iteration_dict_file = r"cell_iteration_list.csv"
-    path = r'C:\Users\bmaru\Documents\Thesis Docs\experiment_files'
+    vehicle_file = r"vehicles.csv"
+
+    # arc_file = 'arcs.csv'
+    # arc_file = r'arcs_set3.csv'
+    # node_file = r'nodes.csv'
+    # trip_file = r'source_sink.csv'
+    # vehicle_file = r"vehicles.csv"
+    # cell_file = r"cells.csv"
+    # experiment_file = r"Experiments.csv"
+    # cell_iteration_dict_file = r"cell_iteration_list.csv"
+
     simulation_time = 0
 
     data = Data_Generator.simulation(arc_file=arc_file,
