@@ -15,32 +15,16 @@ import matplotlib.pyplot as plt
 
 
 # Initializing the model
-def initialize_setup(run_id,path,arc_file,trip_file,experiment_file,vehicle_file):
-    # run_id = 'setup_1'
-    # base_path = r'D:\Documents\Thesis_Docs\experiment_files'
-    # arc_file = 'arcs_'+ run_id+'.csv'
-    # trip_file = 'source_sink_' + run_id + '.csv'
-    # experiment_file = r"Experiments.csv"
-    # vehicle_file = r"vehicles.csv"
-
+def initialize_setup(run_id,path,arc_file,trip_file,df_experiment,vehicle_file,experiment_number):
     path = os.path.join(path,run_id)
-
-
-    # arc_file = 'arcs.csv'
-    # arc_file = r'arcs_set3.csv'
-    # node_file = r'nodes.csv'
-    # trip_file = r'source_sink.csv'
-    # vehicle_file = r"vehicles.csv"
-    # cell_file = r"cells.csv"
-    # experiment_file = r"Experiments.csv"
-    # cell_iteration_dict_file = r"cell_iteration_list.csv"
-
     simulation_time = 0
     data = Data_Generator.simulation(arc_file=arc_file,
                                      trip_file=trip_file,
                                      vehicle_file=vehicle_file,
-                                     experiment_file=experiment_file,
-                                     path=path)
+                                     df_experiment=df_experiment,
+                                     path=path,
+                                     experiment_number=experiment_number)
+
 
     optimization_model = Optimization.MinCostFlow(node_set=data.get_node_set(),
                                                   trip_set=data.get_trip_set(),
@@ -111,8 +95,39 @@ def transaction_manager_sim_loop(simulation_time,data):
 
     return
 
-def run_simulation(run_id,path,arc_file,trip_file,experiment_file,vehicle_file):
-    data = initialize_setup(run_id,path,arc_file,trip_file,experiment_file,vehicle_file)
+
+def get_experiment_data(path,experiment_file):
+    experiment_file_path = os.path.join(path,experiment_file)
+    exper_df = pd.read_csv(experiment_file_path)
+    exper_experiment_list = list(exper_df['Experiment'])
+    exper_experiment_set =set(exper_df['Experiment'])
+    if len(exper_experiment_list) != exper_experiment_set:
+        print("***\n*\nproblem in experiment setup file \n*\n***")
+    return exper_df
+
+            #     self.exper_num = self.exper_data.iloc[experiment_number][0]
+            # self.exper_coordination = self.exper_data.iloc[experiment_number][1]
+            # self.exper_coordination_period = self.exper_data.iloc[experiment_number][2]
+            # self.exper_demand_multiplier = self.exper_data.iloc[experiment_number][3]
+            # self.exper_cell_travel_time_calc = self.exper_data.iloc[experiment_number][4]
+            # self.exper_simulation_time_interval = self.exper_data.iloc[experiment_number][5]
+            # self.exper_total_sim_time = self.exper_data.iloc[experiment_number][6]
+            # self.exper_vehicle_length = self.exper_data.iloc[experiment_number][7]
+            # self.exper_trials_per_experiment = self.exper_data.iloc[experiment_number][8]
+
+
+def run_simulation_experiments(run_id,path,path_out,arc_file,trip_file,experiment_file,vehicle_file):
+    df_experiment = get_experiment_data(path,experiment_file)
+    for row in df_experiment.iterrows():
+        experiment_id = row[1][0]
+        # coordinated experiment:
+        run_simulation(run_id,path,path_out,arc_file,trip_file,df_experiment,vehicle_file,experiment_id)
+        # uncoordinated experiment:
+        run_simulation(run_id,path,path_out,arc_file,trip_file,df_experiment,vehicle_file,experiment_id)
+    return
+
+def run_simulation(run_id,path,path_out,arc_file,trip_file,df_experiment,vehicle_file,experiment_id):
+    data = initialize_setup(run_id,path,arc_file,trip_file,df_experiment,vehicle_file,experiment_number=experiment_id)
     stop_list = [(i * 10 * data.exper_simulation_time_interval) for i in range(10)]
     for simulation_time in range(int(30),int(data.exper_total_sim_time),int(data.exper_simulation_time_interval)):
         transaction_manager_sim_loop(simulation_time=simulation_time,
@@ -124,9 +139,9 @@ def run_simulation(run_id,path,arc_file,trip_file,experiment_file,vehicle_file):
             print(f'Number of vehicles: ')
 
     # path = r'D:\Documents\Thesis_Docs\experiment_files'
-    data.df_vehicles.to_csv(os.path.join(path,'vehicle_OUTPUT.txt'),sep='\t')
-    data.df_opt.to_csv(os.path.join(path, 'opt_OUTPUT.txt'), sep='\t')
-    return data.df_vehicles,data.df_opt
+    data.df_vehicles.to_csv(os.path.join(path_out,'experiment_'+experiment_id+'vehicle_OUTPUT.txt'),sep='\t')
+    data.df_opt.to_csv(os.path.join(path_out,'experiment_'+experiment_id+ 'opt_OUTPUT.txt'), sep='\t')
+    return 
 
 
 # data = initialize_setup()
@@ -135,6 +150,9 @@ def run_simulation(run_id,path,arc_file,trip_file,experiment_file,vehicle_file):
 
 run_id = 'setup_2'
 path = r'D:\Documents\Thesis_Docs\experiment_files'
+path_out = os.path.join(path,run_id+'_outputs')
+if not os.path.exists(path_out):
+    os.mkdir(path_out)
 # path = os.path.join(path, run_id)
 arc_file = 'arcs_' + run_id + '.csv'
 trip_file = 'source_sink_' + run_id + '.csv'
@@ -142,10 +160,11 @@ experiment_file = r"Experiments.csv"
 vehicle_file = r"vehicles.csv"
 
 
-start_time = time.time()
-df_vehicles,df_opt = run_simulation(run_id,path,arc_file,trip_file,experiment_file,vehicle_file)
-end_time = time.time()
-print("--- runtime = %s seconds ---" %(end_time - start_time))
+
+# start_time = time.time()
+# df_vehicles,df_opt = run_simulation(run_id,path,arc_file,trip_file,experiment_file,vehicle_file)
+# end_time = time.time()
+# print("--- runtime = %s seconds ---" %(end_time - start_time))
 
 
 # #pass by ref verification

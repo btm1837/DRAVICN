@@ -1,3 +1,4 @@
+from typing import OrderedDict
 import pandas
 import numpy as np
 import Cell_Class
@@ -8,6 +9,7 @@ import CTM_function
 import random
 import pandas as pd
 import os
+from collections import OrderedDict
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -18,7 +20,7 @@ class simulation():
 
 
     """
-    def __init__(self,arc_file,trip_file,vehicle_file,experiment_file,path):
+    def __init__(self,arc_file,trip_file,vehicle_file,df_experiment,path,experiment_number):
         """ create values based on input parameters"""
         # node set
         self.node_set = set()
@@ -43,8 +45,10 @@ class simulation():
         self.trip_total_initial_trips= 0
         self.trip_total_current_trips=0
         #new trip parameters
-        self.source_dict = {}
-        self.sink_dict = {}
+
+        # make the source and sink ordered dicts for trip assignment iteration will then be more repeatably random across trials
+        self.source_dict = OrderedDict()
+        self.sink_dict = OrderedDict()
 
 
         # vehicle data parameters
@@ -88,8 +92,8 @@ class simulation():
         self.df_opt = pandas.DataFrame(columns=self.columns_opt)
 
         # experiment data parameters
-        experiment_file_path = os.path.join(path,experiment_file)
-        self.exper_data = pandas.read_csv(experiment_file_path)
+        # experiment_file_path = os.path.join(path,experiment_file)
+        self.exper_data = df_experiment
         self.exper_experiment_list = set(self.exper_data['Experiment'])
         self.exper_num='NA'
         self.exper_coordination = 'NA'
@@ -99,8 +103,9 @@ class simulation():
         self.exper_simulation_time_interval = 0
         self.exper_total_sim_time = 0
         self.exper_vehicle_length = 0
+        self.exper_trials_per_experiment =0
         # Initialize to first experiment
-        self.set_experiment_values(0)
+        self.set_experiment_values(experiment_number=experiment_number)
 
         #graph network
         self.network_graph=0
@@ -118,6 +123,7 @@ class simulation():
             self.exper_simulation_time_interval = self.exper_data.iloc[experiment_number][5]
             self.exper_total_sim_time = self.exper_data.iloc[experiment_number][6]
             self.exper_vehicle_length = self.exper_data.iloc[experiment_number][7]
+            self.exper_trials_per_experiment = self.exper_data.iloc[experiment_number][8]
         self.create_data_for_experiment()
         return
 
@@ -178,10 +184,12 @@ class simulation():
             #using dictionaries for removeing vehicles and adding them
             # dictionary value is trips/sim time unit
             if Type=='source':
-                self.source_dict[Node] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
+                self.source_dict[Node] ={}
+                self.source_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
             #sink has touple format to know how many trips have been allocated during a sim unit
             elif Type=='sink':
-                self.sink_dict[Node] = [round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval)),0]
+                self.sink_dict[Node] = {}
+                self.sink_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
             else:
                 print('###########################')
                 print('fatal error in trips data')
@@ -208,18 +216,22 @@ class simulation():
         # for uncoordinated runs only tell the optimzation to use new trips
         if self.exper_coordination == 0:
             self.trip_set = set()
+            self.read_trip_table(simulation_time=simulation_time)
+            return
 
         self.set_sink_capcity_to_zero()
         for source_node in self.source_dict:
             for i in range(0,int(self.source_dict[source_node])):
-                sink_list = [node1 for node1 in self.sink_dict if self.sink_dict[node1][1] < self.sink_dict[node1][0]]
+                #check the capcity of the sink is less than the mean flow (total capacity)
+                sink_list = [node1 for node1 in self.sink_dict if self.sink_dict[node1]['current_capacity'] < self.sink_dict[node1]['mean_flow']]
                 sel_sink = random.choice(sink_list)
                 trip_name = str(source_node) +'_to_' +str(sel_sink) +'_@t_' +str(simulation_time)+'_#'+str(i)
                 self.trip_set.add(trip_name)
                 #auto set all vehicle types to 1
                 # need to set vehicle types according to source sink profile
                 self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sel_sink)
-                self.sink_dict[sel_sink][1] = self.sink_dict[sel_sink][1] + 1
+                # increment the current capcity by one
+                self.sink_dict[sel_sink]['current_capacity'] += 1 
 
                 #same net demand logic
                 for node in self.node_set:
@@ -234,10 +246,29 @@ class simulation():
                         self.trip_net_demand[node,trip_name]=0
         self.set_sink_capcity_to_zero()
         return
+    
+    def read_trip_table(self,simulation_time):
+        """
+        Intended to create a time  table for trips and source sink assignments at the begingin of the sim
+        just a fucntion that assigns trips according to the premade trip table
+        
+        outputs needed: 
+        add to the trip set
+        add trip name to trip vehicle type origin dest
+        use the net demand logic
+
+        """
+         
+
+        
+
+
+        return
 
     def set_sink_capcity_to_zero(self):
         for node in self.sink_dict:
-            self.sink_dict[node][1] = 0
+            # self.sink_dict[node][1] = 0
+            self.sink_dict[node]['current_capacity'] = 0
         return
 
     def set_moving_trip_net_demand_in_sim(self):
@@ -322,22 +353,22 @@ class simulation():
 
         return
 
-    def set_arcs_from_cells(self):
-        """
-        Uses the pandas object created by pandas.read_csv('arcs.csv') to populate:
-        self.arc_capacity
-        self.arc_cost
-        self.arc_set
+    # def set_arcs_from_cells(self):
+    #     """
+    #     Uses the pandas object created by pandas.read_csv('arcs.csv') to populate:
+    #     self.arc_capacity
+    #     self.arc_cost
+    #     self.arc_set
 
-        :return:
-        """
-        for cell_id in self.cell_dict:
-            cell_obj = self.cell_dict[cell_id]
-            self.arc_capacity[cell_id] = cell_obj.cell_capacity
-            self.arc_cost[item[1][0], item[1][1]] = item[1][2]
-            self.arc_set.add((item[1][0], item[1][1]))
+    #     :return:
+    #     """
+    #     for cell_id in self.cell_dict:
+    #         cell_obj = self.cell_dict[cell_id]
+    #         self.arc_capacity[cell_id] = cell_obj.cell_capacity
+    #         self.arc_cost[item[1][0], item[1][1]] = item[1][2]
+    #         self.arc_set.add((item[1][0], item[1][1]))
 
-        return
+    #     return
 
     def set_node_set_from_pandas(self):
         """
