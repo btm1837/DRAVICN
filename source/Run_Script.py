@@ -146,18 +146,27 @@ def run_simulation(run_id,path,path_out,arc_file,trip_file,df_experiment,vehicle
 
 # data = initialize_setup()
 # run_simulation()
+if __name__ =='__main__':
+
+    path = r'D:\Documents\Thesis_Docs\experiment_files'
+    set_up_file = r'set_up_2.yaml'
+    # network and source/sinks file
+    file_path = os.path.join(path,set_up_file)
+
+    with open(file_path, 'r') as f:
+        data_dict = yaml.load(f, Loader=yaml.CLoader)
 
 
-run_id = 'setup_2'
-path = r'D:\Documents\Thesis_Docs\experiment_files'
-path_out = os.path.join(path,run_id+'_outputs')
-if not os.path.exists(path_out):
-    os.mkdir(path_out)
-# path = os.path.join(path, run_id)
-arc_file = 'arcs_' + run_id + '.csv'
-trip_file = 'source_sink_' + run_id + '.csv'
-experiment_file = r"Experiments.csv"
-vehicle_file = r"vehicles.csv"
+    # run_id = 'setup_2'
+    # path = r'D:\Documents\Thesis_Docs\experiment_files'
+    # path_out = os.path.join(path,run_id+'_outputs')
+    # if not os.path.exists(path_out):
+    #     os.mkdir(path_out)
+    # # path = os.path.join(path, run_id)
+    # arc_file = 'arcs_' + run_id + '.csv'
+    # trip_file = 'source_sink_' + run_id + '.csv'
+    # experiment_file = r"Experiments.csv"
+    # vehicle_file = r"vehicles.csv"
 
 
 

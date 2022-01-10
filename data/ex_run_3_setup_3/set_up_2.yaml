@@ -1,0 +1,49 @@
+horizontal_roads:
+    set1:
+        number: 4
+        speed: 30
+    set2:
+        number: 1
+        speed: 40
+    set3:
+        speed: 20
+        number: fill
+    total_number: 6
+vertical_roads:
+    set1:
+        number: 4
+        speed: 30
+    set2:
+        number: 1
+        speed: 40
+    set3:
+        speed: 20
+        number: 1
+    total_number: 6
+source_nodes:
+    total_number: 1
+    source1:
+        grid_location: "W"
+        road_location: "top"
+        uniform_flow_per_hour: 4000
+    source2:
+        grid_location: "E"
+        road_location: "top"
+        uniform_flow_per_hour: 4000
+sink_nodes:
+    total_number: 1
+    sink1:
+        grid_location: "E"
+        road_location: "bottom"
+        uniform_flow_per_hour: 4000
+    sink2:
+        grid_location: "W"
+        road_location: "bottom"
+        uniform_flow_per_hour: 4000
+grid_dimensions:
+    horizontal_length: 6
+    vertical_length: 6
+experiment_constants:
+    simulation_time_interval: 30
+run_id: setup_2
+path: D:\Documents\Thesis_Docs\experiment_files
