@@ -14,7 +14,7 @@ G = nx.from_pandas_dataframe(df, 'from', 'to', create_using=nx.DiGraph())
 # Make the graph
 nx.draw(G, with_labels=True, node_size=1500, alpha=0.3, arrows=True)
 
-& nbsp;
+# & nbsp;
 
 # ------- UNDIRECTED
 
