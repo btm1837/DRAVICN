@@ -68,7 +68,8 @@ def source_gen():
 
 # def make_network(set_up_file,path):
 if __name__ == '__main__':
-    path = r'D:\Documents\Thesis_Docs\experiment_files'
+    # path = r'D:\Documents\Thesis_Docs\experiment_files'
+    path = r'/Users/bmarus/projects/thesis/ex_run_3_setup_3/'
     set_up_file = r'set_up_2.yaml'
     # network and source/sinks file
     file_path = os.path.join(path,set_up_file)

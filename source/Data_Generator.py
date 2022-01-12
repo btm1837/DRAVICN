@@ -185,11 +185,13 @@ class simulation():
             # dictionary value is trips/sim time unit
             if Type=='source':
                 self.source_dict[Node] ={}
-                self.source_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
+                self.source_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) *
+                                                             (self.exper_simulation_time_interval))
             #sink has touple format to know how many trips have been allocated during a sim unit
             elif Type=='sink':
                 self.sink_dict[Node] = {}
-                self.sink_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
+                self.sink_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) *
+                                                           (self.exper_simulation_time_interval))
             else:
                 print('###########################')
                 print('fatal error in trips data')
@@ -223,11 +225,12 @@ class simulation():
         for source_node in self.source_dict:
             for i in range(0,int(self.source_dict[source_node])):
                 #check the capcity of the sink is less than the mean flow (total capacity)
-                sink_list = [node1 for node1 in self.sink_dict if self.sink_dict[node1]['current_capacity'] < self.sink_dict[node1]['mean_flow']]
+                sink_list = [node1 for node1 in self.sink_dict if
+                             self.sink_dict[node1]['current_capacity'] < self.sink_dict[node1]['mean_flow']]
                 sel_sink = random.choice(sink_list)
                 trip_name = str(source_node) +'_to_' +str(sel_sink) +'_@t_' +str(simulation_time)+'_#'+str(i)
                 self.trip_set.add(trip_name)
-                #auto set all vehicle types to 1
+                #auto set all vehicle types to 1s
                 # need to set vehicle types according to source sink profile
                 self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sel_sink)
                 # increment the current capcity by one
