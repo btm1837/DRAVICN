@@ -69,8 +69,8 @@ def source_gen():
 # def make_network(set_up_file,path):
 if __name__ == '__main__':
     # path = r'D:\Documents\Thesis_Docs\experiment_files'
-    path = r'/Users/bmarus/projects/thesis/ex_run_3_setup_3/'
-    set_up_file = r'set_up_2.yaml'
+    path = r'D:\Documents\Thesis_Docs\experiment_files\setup_yaml'
+    set_up_file = r'set_up_4.yaml'
     # network and source/sinks file
     file_path = os.path.join(path,set_up_file)
 
@@ -187,7 +187,7 @@ if __name__ == '__main__':
 
 ########################################################################################################################
     # so lets start building the arcs
-    col_list = ['Start','End','Free_Flow_Speed','Direction']
+    col_list = ['Start','End','Free_Flow_Speed','Direction','Grid_Road_Position']
     data_df = pd.DataFrame(columns=col_list)
     for road_key in horizontal_road_data_dict:
         start = label_gen()
@@ -375,13 +375,13 @@ if __name__ == '__main__':
     path = os.path.join(path,data_dict['run_id'])
     if not os.path.exists(path):
         os.makedirs(path)
-    data_df.to_csv(os.path.join(path,filename),sep=',',index=False)
+    # data_df.to_csv(os.path.join(path,filename),sep=',',index=False)
 
     ss_node_list = source_nodes_list+sink_nodes_list
 
     source_sink_df = pd.DataFrame(list(zip(ss_node_list,type_list,ufph_list)),columns=['Node','Type','Uniform_Flow_perHour'])
     new_file_name= 'source_sink_' + data_dict['run_id'] +'.csv'
-    source_sink_df.to_csv(os.path.join(path,new_file_name),sep=',',index=False)
+    # source_sink_df.to_csv(os.path.join(path,new_file_name),sep=',',index=False)
 
     arc_capacity = {}
     arc_cost = {}
@@ -404,5 +404,5 @@ if __name__ == '__main__':
     ax.set_xlim(-1, 1)
     #build a df
     #write to file
-
+    print("well that was cool")
     # return
