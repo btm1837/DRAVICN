@@ -187,7 +187,8 @@ if __name__ == '__main__':
 
 ########################################################################################################################
     # so lets start building the arcs
-    col_list = ['Start','End','Free_Flow_Speed','Direction','Grid_Road_Position']
+    # col_list = ['Start','End','Free_Flow_Speed','Direction','Grid_Road_Position']
+    col_list = ['Start', 'End', 'Free_Flow_Speed', 'Direction']
     data_df = pd.DataFrame(columns=col_list)
     for road_key in horizontal_road_data_dict:
         start = label_gen()
@@ -272,99 +273,99 @@ if __name__ == '__main__':
 
 ########################################################################################################################
     # set up source and sink
-    total_source = data_dict['source_nodes']['total_number']
-    del data_dict['source_nodes']['total_number']
-    total_sink = data_dict['sink_nodes']['total_number']
-    del data_dict['sink_nodes']['total_number']
+    # total_source = data_dict['source_nodes']['total_number']
+    # del data_dict['source_nodes']['total_number']
+    # total_sink = data_dict['sink_nodes']['total_number']
+    # del data_dict['sink_nodes']['total_number']
 
-    # add them onto the correct side of the grid
-    outer_intersections = {}
-    outer_intersections['N'] = horizontal_road_data_dict[0]['intersection']
-    outer_intersections['N_A'] = list(outer_intersections['N'].keys())
-    outer_intersections['S'] = horizontal_road_data_dict[total_horizontal_roads-1]['intersection']
-    outer_intersections['S_A'] = list(outer_intersections['S'].keys())
-    outer_intersections['W'] = vertical_road_data_dict[0]['intersection']
-    outer_intersections['W_A'] = list(outer_intersections['W'].keys())
-    outer_intersections['E'] = vertical_road_data_dict[total_vertical_roads-1]['intersection']
-    outer_intersections['E_A'] = list(outer_intersections['E'].keys())
+    # # add them onto the correct side of the grid
+    # outer_intersections = {}
+    # outer_intersections['N'] = horizontal_road_data_dict[0]['intersection']
+    # outer_intersections['N_A'] = list(outer_intersections['N'].keys())
+    # outer_intersections['S'] = horizontal_road_data_dict[total_horizontal_roads-1]['intersection']
+    # outer_intersections['S_A'] = list(outer_intersections['S'].keys())
+    # outer_intersections['W'] = vertical_road_data_dict[0]['intersection']
+    # outer_intersections['W_A'] = list(outer_intersections['W'].keys())
+    # outer_intersections['E'] = vertical_road_data_dict[total_vertical_roads-1]['intersection']
+    # outer_intersections['E_A'] = list(outer_intersections['E'].keys())
 
-    # outer_intersections['N_rk'] =
-    source_nodes_list=[]
-    sink_nodes_list=[]
-    type_list=[]
-    ufph_list = []
-    for source_set in data_dict['source_nodes']:
-        source_set_dict = data_dict['source_nodes'][source_set]
-        grid_location = source_set_dict['grid_location']
-        road_loaction = source_set_dict['road_location']
-        ufph = source_set_dict['uniform_flow_per_hour']
-        if road_loaction=="mid":
-            pop_l = lambda x: round(len(x)/2)
-        elif road_loaction=="top":
-            pop_l = lambda x: len(x)-1
-        else: # road_loaction == "bottom":
-            pop_l = lambda x: 0
-        try:
-            node_index = outer_intersections[grid_location+"_A"].pop(pop_l(outer_intersections[grid_location+"_A"]))
-            node = outer_intersections[grid_location][node_index]
-        except:
-            print("no more intersection nodes on:\t" + str(grid_location))
-            print("fatal data entry error")
-            # return
-        source_node = source_gen()
+    # # outer_intersections['N_rk'] =
+    # source_nodes_list=[]
+    # sink_nodes_list=[]
+    # type_list=[]
+    # ufph_list = []
+    # for source_set in data_dict['source_nodes']:
+    #     source_set_dict = data_dict['source_nodes'][source_set]
+    #     grid_location = source_set_dict['grid_location']
+    #     road_loaction = source_set_dict['road_location']
+    #     ufph = source_set_dict['uniform_flow_per_hour']
+    #     if road_loaction=="mid":
+    #         pop_l = lambda x: round(len(x)/2)
+    #     elif road_loaction=="top":
+    #         pop_l = lambda x: len(x)-1
+    #     else: # road_loaction == "bottom":
+    #         pop_l = lambda x: 0
+    #     try:
+    #         node_index = outer_intersections[grid_location+"_A"].pop(pop_l(outer_intersections[grid_location+"_A"]))
+    #         node = outer_intersections[grid_location][node_index]
+    #     except:
+    #         print("no more intersection nodes on:\t" + str(grid_location))
+    #         print("fatal data entry error")
+    #         # return
+    #     source_node = source_gen()
 
-        if grid_location =='W':
-            temp_list_source= [source_node,node ,vertical_road_data_dict[road_key]['speed'],grid_location]
-        elif grid_location=='E':
-            temp_list_source = [source_node,node, vertical_road_data_dict[road_key]['speed'], grid_location]
-        elif grid_location=='S':
-            temp_list_source= [source_node,node, vertical_road_data_dict[road_key]['speed'],grid_location]
-        elif grid_location=='N':
-            temp_list_source = [source_node,node , vertical_road_data_dict[road_key]['speed'], grid_location]
+    #     if grid_location =='W':
+    #         temp_list_source= [source_node,node ,vertical_road_data_dict[road_key]['speed'],grid_location]
+    #     elif grid_location=='E':
+    #         temp_list_source = [source_node,node, vertical_road_data_dict[road_key]['speed'], grid_location]
+    #     elif grid_location=='S':
+    #         temp_list_source= [source_node,node, vertical_road_data_dict[road_key]['speed'],grid_location]
+    #     elif grid_location=='N':
+    #         temp_list_source = [source_node,node , vertical_road_data_dict[road_key]['speed'], grid_location]
 
-        source_nodes_list.append(source_node)
-        type_list.append("source")
-        ufph_list.append(ufph)
+    #     source_nodes_list.append(source_node)
+    #     type_list.append("source")
+    #     ufph_list.append(ufph)
 
-        temp_df1 = pd.DataFrame([temp_list_source], columns=col_list)
-        data_df = data_df.append(temp_df1)
+    #     temp_df1 = pd.DataFrame([temp_list_source], columns=col_list)
+    #     data_df = data_df.append(temp_df1)
 
-    for sink_set in data_dict['sink_nodes']:
-        sink_set_dict = data_dict['sink_nodes'][sink_set]
-        grid_location = sink_set_dict['grid_location']
-        road_loaction = sink_set_dict['road_location']
-        ufph = sink_set_dict['uniform_flow_per_hour']
-        if road_loaction=="mid":
-            pop_l = lambda x: round(len(x)/2)
-        elif road_loaction=="top":
-            pop_l = lambda x: len(x)-1
-        else: # road_loaction == "bottom":
-            pop_l = lambda x: 0
-        try:
-            node_index = outer_intersections[grid_location+"_A"].pop(pop_l(outer_intersections[grid_location+"_A"]))
-            node = outer_intersections[grid_location][node_index]
-        except:
-            print("no more intersection nodes on:\t" + str(grid_location))
-            print("fatal data entry error")
-            # return
-        sink_node = sink_gen()
+    # for sink_set in data_dict['sink_nodes']:
+    #     sink_set_dict = data_dict['sink_nodes'][sink_set]
+    #     grid_location = sink_set_dict['grid_location']
+    #     road_loaction = sink_set_dict['road_location']
+    #     ufph = sink_set_dict['uniform_flow_per_hour']
+    #     if road_loaction=="mid":
+    #         pop_l = lambda x: round(len(x)/2)
+    #     elif road_loaction=="top":
+    #         pop_l = lambda x: len(x)-1
+    #     else: # road_loaction == "bottom":
+    #         pop_l = lambda x: 0
+    #     try:
+    #         node_index = outer_intersections[grid_location+"_A"].pop(pop_l(outer_intersections[grid_location+"_A"]))
+    #         node = outer_intersections[grid_location][node_index]
+    #     except:
+    #         print("no more intersection nodes on:\t" + str(grid_location))
+    #         print("fatal data entry error")
+    #         # return
+    #     sink_node = sink_gen()
 
-        source_nodes_list.append(sink_node)
-        type_list.append("sink")
-        ufph_list.append(ufph)
+    #     source_nodes_list.append(sink_node)
+    #     type_list.append("sink")
+    #     ufph_list.append(ufph)
 
-        if grid_location =='W':
-            temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
-        elif grid_location=='E':
-            temp_list_sink = [node,sink_node , vertical_road_data_dict[road_key]['speed'], grid_location]
-        elif grid_location=='S':
-            temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
-        elif grid_location=='N':
-            temp_list_sink = [node,sink_node , vertical_road_data_dict[road_key]['speed'], grid_location]
+    #     if grid_location =='W':
+    #         temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
+    #     elif grid_location=='E':
+    #         temp_list_sink = [node,sink_node , vertical_road_data_dict[road_key]['speed'], grid_location]
+    #     elif grid_location=='S':
+    #         temp_list_sink= [node,sink_node,vertical_road_data_dict[road_key]['speed'],grid_location]
+    #     elif grid_location=='N':
+    #         temp_list_sink = [node,sink_node , vertical_road_data_dict[road_key]['speed'], grid_location]
 
 
-        temp_df = pd.DataFrame([temp_list_sink], columns=col_list)
-        data_df = data_df.append(temp_df)
+    #     temp_df = pd.DataFrame([temp_list_sink], columns=col_list)
+    #     data_df = data_df.append(temp_df)
 
 # Then create the sink file with that designation, and insert the uniform flow per hour
 
@@ -375,12 +376,12 @@ if __name__ == '__main__':
     path = os.path.join(path,data_dict['run_id'])
     if not os.path.exists(path):
         os.makedirs(path)
-    # data_df.to_csv(os.path.join(path,filename),sep=',',index=False)
+    data_df.to_csv(os.path.join(path,filename),sep=',',index=False)
 
-    ss_node_list = source_nodes_list+sink_nodes_list
+    # ss_node_list = source_nodes_list+sink_nodes_list
 
-    source_sink_df = pd.DataFrame(list(zip(ss_node_list,type_list,ufph_list)),columns=['Node','Type','Uniform_Flow_perHour'])
-    new_file_name= 'source_sink_' + data_dict['run_id'] +'.csv'
+    # source_sink_df = pd.DataFrame(list(zip(ss_node_list,type_list,ufph_list)),columns=['Node','Type','Uniform_Flow_perHour'])
+    # new_file_name= 'source_sink_' + data_dict['run_id'] +'.csv'
     # source_sink_df.to_csv(os.path.join(path,new_file_name),sep=',',index=False)
 
     arc_capacity = {}
