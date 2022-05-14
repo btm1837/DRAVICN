@@ -74,9 +74,9 @@ class MinCostFlow:
         self.m.trip_set = pe.Set(initialize=self.trip_set)
 
         #Create Params
-        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_cost)
-        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_capacity)
-        self.m.Net_demand_param = pe.Param(self.m.node_set,self.m.trip_set, initialize=self.trip_net_demand)
+        self.m.Cost_param = pe.Param(self.m.arc_set, initialize=self.arc_cost, within=pe.Reals)
+        self.m.Capacity_param = pe.Param(self.m.arc_set, initialize=self.arc_capacity, within=pe.Reals)
+        self.m.Net_demand_param = pe.Param(self.m.node_set,self.m.trip_set, initialize=self.trip_net_demand, within=pe.Integers)
 
         # Create variables
         self.m.Y = pe.Var(self.m.arc_set , self.m.trip_set, domain=pe.NonNegativeReals)

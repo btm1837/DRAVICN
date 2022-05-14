@@ -290,18 +290,18 @@ class simulation():
         #     cell_object.
 
     # actual code
-        # for source_node in self.node_set:
-        #     for num_vehicles in range(int(self.exper_demand_multiplier)):
-        #         if 'start' in source_node or 'end' in source_node:
-        #             continue
-        #         sink_node = self.get_sink_node(source_node)
-        #         trip_name = str(source_node) +'_to_' +str(sink_node) +'_@t_' +str(simulation_time)+'_#'+str(num_vehicles)
-        #         self.trip_set.add(trip_name)
-        #         #auto set all vehicle types to 1s
-        #         # need to set vehicle types according to source sink profile
-        #         self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sink_node)
-
-        #         self.set_net_demand_logic(source_node,sink_node,trip_name)
+    #     for source_node in self.node_set:
+    #         for num_vehicles in range(int(self.exper_demand_multiplier)):
+    #             if 'start' in source_node or 'end' in source_node:
+    #                 continue
+    #             sink_node = self.get_sink_node(source_node)
+    #             trip_name = str(source_node) +'_to_' +str(sink_node) +'_@t_' +str(simulation_time)+'_#'+str(num_vehicles)
+    #             self.trip_set.add(trip_name)
+    #             #auto set all vehicle types to 1s
+    #             # need to set vehicle types according to source sink profile
+    #             self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sink_node)
+    #
+    #             self.set_net_demand_logic(source_node,sink_node,trip_name)
 
     # test code for limited number of vehicles
         for num_vehicles in range(int(self.exper_demand_multiplier)):
