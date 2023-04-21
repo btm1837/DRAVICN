@@ -1,0 +1,5 @@
+Node,Type,Uniform_Flow_perHour
+start_1,source,4000
+start_2,source,4000
+end_1,sink,4000
+end_2,sink,4000

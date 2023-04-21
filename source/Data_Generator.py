@@ -1,6 +1,8 @@
 from typing import OrderedDict
 import pandas
 import numpy as np
+from scipy import rand
+from sympy import source
 import Cell_Class
 import Vehicles_Class
 import Intersections_Class
@@ -13,6 +15,9 @@ from collections import OrderedDict
 
 import networkx as nx
 import matplotlib.pyplot as plt
+from sim_logger import logger
+
+import random
 
 class simulation():
     """
@@ -104,6 +109,7 @@ class simulation():
         self.exper_total_sim_time = 0
         self.exper_vehicle_length = 0
         self.exper_trials_per_experiment =0
+        self.exper_flow = 0
         # Initialize to first experiment
         self.set_experiment_values(experiment_number=experiment_number)
 
@@ -124,6 +130,7 @@ class simulation():
             self.exper_total_sim_time = self.exper_data.iloc[experiment_number][6]
             self.exper_vehicle_length = self.exper_data.iloc[experiment_number][7]
             self.exper_trials_per_experiment = self.exper_data.iloc[experiment_number][8]
+            self.exper_flow = self.exper_data.iloc[experiment_number][9]
         self.create_data_for_experiment()
         return
 
@@ -141,6 +148,7 @@ class simulation():
         self.set_source_sink_dict()
         self.trip_check()
         self.create_trips(0)
+        self.populate_initial_vehicles_in_grid(simulation_time=0)
         return
 
     def set_network_graph(self):
@@ -148,7 +156,7 @@ class simulation():
         for arc in self.arc_cost:
             self.arc_label[arc] = 'tt'+str(self.arc_cost[arc]) +'_mv' +str(self.arc_capacity[arc])+'_nic'+str(self.number_in_cell[arc])
 
-        self.network_graph = nx.from_pandas_edgelist(self.arc_data, 'Start', 'End',edge_attr='Cost',create_using=nx.DiGraph)
+        self.network_graph = nx.from_pandas_edgelist(self.arc_data, 'Start', 'End',edge_attr='Free_Flow_Speed',create_using=nx.DiGraph)
         # Make the graph position object
         # self.pos = nx.spring_layout(self.network_graph)
         self.pos = nx.kamada_kawai_layout(self.network_graph)
@@ -185,11 +193,13 @@ class simulation():
             # dictionary value is trips/sim time unit
             if Type=='source':
                 self.source_dict[Node] ={}
-                self.source_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
+                self.source_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) *
+                                                             (self.exper_simulation_time_interval))
             #sink has touple format to know how many trips have been allocated during a sim unit
             elif Type=='sink':
                 self.sink_dict[Node] = {}
-                self.sink_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) * (self.exper_simulation_time_interval))
+                self.sink_dict[Node]['mean_flow'] = round( Uniform_Flow_perHour * (1/3600) *
+                                                           (self.exper_simulation_time_interval))
             else:
                 print('###########################')
                 print('fatal error in trips data')
@@ -199,8 +209,8 @@ class simulation():
         return
     # check source and sink to make sure net flow is zero
     def trip_check(self):
-        source_sum = sum(self.source_dict.values())
-        sink_sum = sum([item[0] for item in self.sink_dict.values()])
+        source_sum = sum([item['mean_flow'] for item in self.source_dict.values()])
+        sink_sum = sum([item['mean_flow'] for item in self.sink_dict.values()])
 
         if source_sum!=sink_sum:
             print('###########################')
@@ -214,20 +224,21 @@ class simulation():
     # need to initialize trips set
     def create_trips(self,simulation_time):
         # for uncoordinated runs only tell the optimzation to use new trips
-        if self.exper_coordination == 0:
-            self.trip_set = set()
-            self.read_trip_table(simulation_time=simulation_time)
-            return
+        # if self.exper_coordination == 0:
+        #     self.trip_set = set()
+        #     self.read_trip_table(simulation_time=simulation_time)
+        #     return
 
         self.set_sink_capcity_to_zero()
         for source_node in self.source_dict:
-            for i in range(0,int(self.source_dict[source_node])):
+            for i in range(0,int(self.source_dict[source_node]['mean_flow'])):
                 #check the capcity of the sink is less than the mean flow (total capacity)
-                sink_list = [node1 for node1 in self.sink_dict if self.sink_dict[node1]['current_capacity'] < self.sink_dict[node1]['mean_flow']]
+                sink_list = [node1 for node1 in self.sink_dict if
+                             self.sink_dict[node1]['current_capacity'] < self.sink_dict[node1]['mean_flow']]
                 sel_sink = random.choice(sink_list)
                 trip_name = str(source_node) +'_to_' +str(sel_sink) +'_@t_' +str(simulation_time)+'_#'+str(i)
                 self.trip_set.add(trip_name)
-                #auto set all vehicle types to 1
+                #auto set all vehicle types to 1s
                 # need to set vehicle types according to source sink profile
                 self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sel_sink)
                 # increment the current capcity by one
@@ -262,6 +273,76 @@ class simulation():
 
         
 
+
+        return
+
+# fucntion for setting the grid position of the cell
+    def populate_initial_vehicles_in_grid(self,simulation_time):
+
+    # loop through road segments
+        # assign 1 vehicle per arc
+            # randomly assign destination arc for the trip 
+            # create new trip for this new vehicle
+    
+    # rough cut
+        # for cell_id,cell_object in self.cell_dict.items():
+        #     # some if statement for not getting vehicles? 
+        #     cell_object.
+
+    # actual code
+    #     for source_node in self.node_set:
+    #         for num_vehicles in range(int(self.exper_demand_multiplier)):
+    #             if 'start' in source_node or 'end' in source_node:
+    #                 continue
+    #             sink_node = self.get_sink_node(source_node)
+    #             trip_name = str(source_node) +'_to_' +str(sink_node) +'_@t_' +str(simulation_time)+'_#'+str(num_vehicles)
+    #             self.trip_set.add(trip_name)
+    #             #auto set all vehicle types to 1s
+    #             # need to set vehicle types according to source sink profile
+    #             self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sink_node)
+    #
+    #             self.set_net_demand_logic(source_node,sink_node,trip_name)
+
+    # test code for limited number of vehicles
+        for num_vehicles in range(int(self.exper_demand_multiplier)):
+            source_node = random.choice(list(self.node_set))
+            if 'start' in source_node or 'end' in source_node:
+                continue
+            sink_node = self.get_sink_node(source_node)
+            trip_name = str(source_node) +'_to_' +str(sink_node) +'_@t_' +str(simulation_time)+'_#'+str(num_vehicles)
+            self.trip_set.add(trip_name)
+            #auto set all vehicle types to 1s
+            # need to set vehicle types according to source sink profile
+            self.trip_vehicle_type_origin_dest[trip_name] = (0,source_node,sink_node)
+
+            self.set_net_demand_logic(source_node,sink_node,trip_name)
+
+        return
+
+    def get_sink_node(self,source_node):
+        need_sink=True
+        while need_sink:
+            sink_node = random.choice(list(self.node_set))
+            if 'start' in sink_node or 'end' in sink_node:
+                continue
+            if (source_node,sink_node) in self.arc_set or (sink_node, source_node) in self.arc_set:
+                continue
+            if sink_node != source_node:
+                need_sink=False
+        return sink_node
+
+# generic net demand logic setting
+    def set_net_demand_logic(self,source_node,sink_node,trip_name):
+        for node in self.node_set:
+            if source_node == node:
+                # A demand node on the trip
+                self.trip_net_demand[source_node, trip_name] = -1
+            elif sink_node == node:
+                # A supply node on the trip
+                self.trip_net_demand[sink_node, trip_name] = 1
+            else:
+                # all other nodes on the trip matrix
+                self.trip_net_demand[node,trip_name]=0
 
         return
 
@@ -317,25 +398,32 @@ class simulation():
             vehicle = self.vehicle_dict[vehicle_key]
             cell = self.cell_dict[vehicle.current_cell_location]
             node = cell.cell_id[1]
-            if self.sink_dict[node][1] < self.sink_dict[node][0]:
-                removed_v = cell.cell_queue.pop()
-                #get data for output
-                removed_v.time_out_sim = simulation_time
-                time_taken = removed_v.time_out_sim - removed_v.time_in_sim
-                list = [removed_v.vehicle_ID,removed_v.origin,removed_v.destination,removed_v.initial_routing,
-                        removed_v.route_traveled,time_taken,removed_v.time_out_sim,removed_v.time_in_sim]
-                temp = pandas.DataFrame([list],columns=self.columns_v)
-                self.df_vehicles= self.df_vehicles.append(temp)
-                del self.vehicle_dict[vehicle_key]
-
-                # if the experiement is with coordination tell the optimiation not to include this trip
-                # otherwise in un-coordinated runs this trip is already removed from tripset
-                if self.exper_coordination == 1:
-                    self.trip_set.remove(removed_v.vehicle_ID)
-
-                self.sink_dict[node][1] = self.sink_dict[node][1] +1
+            
+            if self.exper_flow == 0:
+                self.remove_vehicle(cell,simulation_time,vehicle_key)
+            else:
+                if self.sink_dict[node]['mean_flow'] < self.sink_dict[node]['capacity']:
+                    self.remove_vehicle(cell,simulation_time,vehicle_key)
+                    self.sink_dict[node][1] = self.sink_dict[node][1] +1
         return
 
+    def remove_vehicle(self,cell,simulation_time,vehicle_key):
+        removed_v = cell.cell_queue.pop()
+        #get data for output
+        removed_v.time_out_sim = simulation_time
+        time_taken = removed_v.time_out_sim - removed_v.time_in_sim
+        list = [removed_v.vehicle_ID,removed_v.origin,removed_v.destination,removed_v.initial_routing,
+                removed_v.route_traveled,time_taken,removed_v.time_out_sim,removed_v.time_in_sim]
+        temp = pandas.DataFrame([list],columns=self.columns_v)
+        self.df_vehicles= self.df_vehicles.append(temp)
+        del self.vehicle_dict[vehicle_key]
+
+        # if the experiement is with coordination tell the optimiation not to include this trip
+        # otherwise in un-coordinated runs this trip is already removed from tripset
+        # if self.exper_coordination == 1:
+        self.trip_set.remove(removed_v.vehicle_ID)
+        
+        return
 
     def set_arc_attributes_from_pandas(self):
         """
@@ -518,6 +606,7 @@ class simulation():
                 self.cell_dict[(end_node, next_node)].intersection_status = 'start_cell'
                 self.cell_dict[(end_node, next_node)].prior_cell = cell.cell_id
         return
+
 
 
     def create_cell_dict(self):

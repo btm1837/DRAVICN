@@ -78,6 +78,16 @@ class Cell:
         # prior cell
         self.prior_cell = ''
 
+        # grid position
+        # where 0,0 is the W,S corner of the grid
+        # then xmax, ymax is the NE corner
+        # grid position is a touple run,rise = x,y where 
+            # x is the position west to east
+            # y is the position s to North
+        # the grid position is alway interpretted as
+            # the start of the road
+        self.grid_road_position = None
+
 
 
     # Getters Block

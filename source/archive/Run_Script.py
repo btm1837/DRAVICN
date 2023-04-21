@@ -148,9 +148,9 @@ def run_simulation(run_id,path,path_out,arc_file,trip_file,df_experiment,vehicle
 # run_simulation()
 
 
-run_id = 'setup_2'
+run_id = 'setup_3'
 path = r'D:\Documents\Thesis_Docs\experiment_files'
-path_out = os.path.join(path,run_id+'_outputs')
+path_out = os.path.join(path,run_id,'outputs')
 if not os.path.exists(path_out):
     os.mkdir(path_out)
 # path = os.path.join(path, run_id)
