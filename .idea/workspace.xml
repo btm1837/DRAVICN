@@ -7,8 +7,6 @@
     <list default="true" id="556a6e91-efaa-46d8-b65c-586e19c885e5" name="Default Changelist" comment="updates to run script, allowing mulitple experiments to be run from file">
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/Data_Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Data_Generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/Optimization.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Optimization.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/Run_Script.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Run_Script.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -44,6 +42,11 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/../../Anaconda_New/envs/thesis/lib/site-packages/pyomo/core/base/indexed_component.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../Anaconda_New/envs/thesis/lib/site-packages/pandas/core/internals/construction.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/../../Anaconda_New/envs/thesis/lib/site-packages/pyomo/opt/solver/shellcmd.py" root0="SKIP_INSPECTION" />
+  </component>
   <component name="ProjectId" id="1sgXOos0gAEDJDt5pyG5ncWMK3b" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -53,7 +56,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../Anaconda_New/Scripts/conda.exe" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
   <component name="RunManager" selected="Python.Run_Script">
     <configuration name="Run_Script" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">

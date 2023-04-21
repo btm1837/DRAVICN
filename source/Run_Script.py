@@ -167,17 +167,17 @@ if __name__ =='__main__':
     # with open(file_path, 'r') as f:
     #     data_dict = yaml.load(f, Loader=yaml.CLoader)
 
-
-    # run_id = 'setup_2'
-    # path = r'D:\Documents\Thesis_Docs\experiment_files'
-    # path_out = os.path.join(path,run_id+'_outputs')
-    # if not os.path.exists(path_out):
-    #     os.mkdir(path_out)
-    # # path = os.path.join(path, run_id)
-    # arc_file = 'arcs_' + run_id + '.csv'
-    # trip_file = 'source_sink_' + run_id + '.csv'
-    # experiment_file = r"Experiments.csv"
-    # vehicle_file = r"vehicles.csv"
+# Desktop setup
+    run_id = 'setup_5'
+    path = r'D:\Documents\Thesis_Docs\experiment_files'
+    path_out = os.path.join(path,run_id+'_outputs')
+    if not os.path.exists(path_out):
+        os.mkdir(path_out)
+    # path = os.path.join(path, run_id)
+    arc_file = 'arcs_' + run_id + '.csv'
+    trip_file = 'source_sink_' + run_id + '.csv'
+    experiment_file = r"Experiments.csv"
+    vehicle_file = r"vehicles.csv"
 
     # run_id = 'setup_4'
     # path = r'D:\Documents\Thesis_Docs\experiment_files'
@@ -190,18 +190,18 @@ if __name__ =='__main__':
     # experiment_file = r"Experiments.csv"
     # vehicle_file = r"vehicles.csv"
 
-# mac book setup
-    run_id = 'setup_5'
-    # path = r'D:\Documents\Thesis_Docs\experiment_files'experiment_files
-    path = r'/Users/bmarus/Documents/working/thesis_working/experiment_files_2'
-    path_out = os.path.join(path,run_id,'outputs')
-    if not os.path.exists(path_out):
-        os.mkdir(path_out)
-    # path = os.path.join(path, run_id)
-    arc_file = 'arcs_' + run_id + '.csv'
-    trip_file = 'source_sink_' + run_id + '.csv'
-    experiment_file = r"Experiments.csv"
-    vehicle_file = r"vehicles.csv"
+# # mac book setup
+#     run_id = 'setup_5'
+#     # path = r'D:\Documents\Thesis_Docs\experiment_files'experiment_files
+#     path = r'/Users/bmarus/Documents/working/thesis_working/experiment_files_2'
+#     path_out = os.path.join(path,run_id,'outputs')
+#     if not os.path.exists(path_out):
+#         os.mkdir(path_out)
+#     # path = os.path.join(path, run_id)
+#     arc_file = 'arcs_' + run_id + '.csv'
+#     trip_file = 'source_sink_' + run_id + '.csv'
+#     experiment_file = r"Experiments.csv"
+#     vehicle_file = r"vehicles.csv"
 
     # start_time = time.time()
     # df_vehicles,df_opt = run_simulation(run_id=run_id,
