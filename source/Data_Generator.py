@@ -435,7 +435,7 @@ class simulation():
         :return:
         """
         for item in self.arc_data.iterrows():
-            self.arc_capacity[item[1][0],item[1][1]]=item[1][3]
+            self.arc_capacity[item[1][0],item[1][1]]=item[1][2]
             self.arc_cost[item[1][0],item[1][1]]=item[1][2]
             self.arc_set.add((item[1][0],item[1][1]))
 
