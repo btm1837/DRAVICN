@@ -154,7 +154,11 @@ class simulation():
     def set_network_graph(self):
         # make graph object
         for arc in self.arc_cost:
-            self.arc_label[arc] = 'tt'+str(self.arc_cost[arc]) +'_mv' +str(self.arc_capacity[arc])+'_nic'+str(self.number_in_cell[arc])
+            if arc in self.number_in_cell:
+                temp_number_in_cell = self.number_in_cell[arc]
+            else:
+                temp_number_in_cell = 0
+            self.arc_label[arc] = 'tt'+str(self.arc_cost[arc]) +'_mv' +str(self.arc_capacity[arc])+'_nic'+str(temp_number_in_cell)
 
         self.network_graph = nx.from_pandas_edgelist(self.arc_data, 'Start', 'End',edge_attr='Free_Flow_Speed',create_using=nx.DiGraph)
         # Make the graph position object
