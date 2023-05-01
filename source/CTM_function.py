@@ -194,6 +194,9 @@ def ctm_function_t_i_homogenous(data,simulation_time):
                 calc_vehicles_moving_cells_type(cell,prior_cell,data.vehicle_type_dict,cell.max_flow,cell.backwards_wave_speed)
                 cell.number_entering_cell_from_arc[prior_cell.cell_id] = cell.get_number_entering_cell_from_arc(prior_cell.cell_id)
 
+            if int(cell.number_entering_cell_from_arc[prior_cell.cell_id]) == 0:
+                prior_cell.cell_travel_time = prior_cell.simulation_time_unit
+
             for i in range(int(cell.number_entering_cell_from_arc[prior_cell.cell_id])):
                 vehicle = prior_cell.cell_queue.pop()
                 # if vehicle.move_status == True:

@@ -59,6 +59,7 @@ class Cell:
 
         # list of travel times through cell
         self.cell_travel_time_list = [self.cell_travel_time]
+        self.simulation_time_unit = 0
 
         # for ICP need cell capacity
         self.cell_capacity = 0
@@ -187,6 +188,7 @@ class Cell:
         self.length = self.free_flow_speed * (simulation_time_unit/3600)
         self.max_vehicles = self.length / vehicle_length
         self.cell_travel_time = simulation_time_unit
+        self.simulation_time_unit = simulation_time_unit
         self.cell_travel_time_list= [self.cell_travel_time]
         #
         self.max_flow = CTM_function.flow_density_max_flow(cell=self,

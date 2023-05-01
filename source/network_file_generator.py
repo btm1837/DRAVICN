@@ -70,7 +70,7 @@ def source_gen():
 if __name__ == '__main__':
     # path = r'D:\Documents\Thesis_Docs\experiment_files'
     path = r'D:\Documents\Thesis_Docs\experiment_files\setup_yaml'
-    set_up_file = r'set_up_4.yaml'
+    set_up_file = r'set_up_6.yaml'
     # network and source/sinks file
     file_path = os.path.join(path,set_up_file)
 
@@ -380,9 +380,9 @@ if __name__ == '__main__':
 
     # ss_node_list = source_nodes_list+sink_nodes_list
 
-    # source_sink_df = pd.DataFrame(list(zip(ss_node_list,type_list,ufph_list)),columns=['Node','Type','Uniform_Flow_perHour'])
-    # new_file_name= 'source_sink_' + data_dict['run_id'] +'.csv'
-    # source_sink_df.to_csv(os.path.join(path,new_file_name),sep=',',index=False)
+    source_sink_df = pd.DataFrame(list(zip(ss_node_list,type_list,ufph_list)),columns=['Node','Type','Uniform_Flow_perHour'])
+    new_file_name= 'source_sink_' + data_dict['run_id'] +'.csv'
+    source_sink_df.to_csv(os.path.join(path,new_file_name),sep=',',index=False)
 
     arc_capacity = {}
     arc_cost = {}

@@ -16,6 +16,8 @@ vehicle_file = r"vehicles.csv"
 
 data_df = pd.read_csv(os.path.join(path,run_id,arc_file),sep=',')
 
+
+
 network_graph = nx.from_pandas_edgelist(data_df, 'Start', 'End', edge_attr='Free_Flow_Speed',
                                              create_using=nx.DiGraph)
 pos = nx.kamada_kawai_layout(network_graph)
